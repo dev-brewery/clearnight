@@ -36,7 +36,7 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(cfg.sensor.kind, "csv")
         self.assertEqual(cfg.sensor.path, "clearnight/fixtures/sensor.csv")
         self.assertIsNone(cfg.llm.api_key)
-        self.assertEqual(cfg.llm.timeout_s, 30)
+        self.assertEqual(cfg.llm.timeout_s, 300)
         self.assertEqual(cfg.llm.max_tokens, 2000)
 
     def test_explicit_example_path(self):
