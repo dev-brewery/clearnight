@@ -16,12 +16,13 @@ tracker → next brief). Only the builder commits.
 | T05 | CLI skeleton (`plan`/`log`/`fetch`, `--offline`) | ✅ accepted — 54 tests, exit codes verified live | `94c6191` |
 | T04a | De-flake cache timing tests (flake caught post-accept) | ✅ accepted — 5× green runs | `9dd449d` |
 | T06 | Demo fixtures + epoch pinning (ref date corrected → 2026-10-07) | ✅ accepted — 60 tests; live fixtures verified | `6ee7e5a` |
-| T07 | Sky engine (skyfield: dark windows, Moon, radiants) + sky.json | 🔵 in flight | — |
-| T08 | Meteor showers + `data/meteor_showers_2026.json` | ⚪ queued | — |
+| T07 | Sky engine (skyfield: dark windows, Moon, radiants) + sky.json | ✅ accepted — 72 tests; Oct 9 illum 0.26%, 9.58 h dark | `8d2be02` |
+| T08 | Meteor showers + `data/meteor_showers_2026.json` | ✅ accepted — 84 tests; Draconids boundary verified live | `4fe5d43` |
+| T09 | ISS TLE cache + visible-pass prediction + fixture recording | 🔵 in flight | — |
 
-**Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky) in
-flight. **Flags:** tzdata exception pending owner ratification (JOURNAL, T03 entry).
-Delegation briefs live in `out/brief-*.md` (gitignored, ephemeral). **Owner-required, non-delegable:**
+**Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky core):
+✅ T07 accepted. Phase 3 (events) next: T08–T09. **Flags:** tzdata exception pending
+owner ratification (JOURNAL, T03 entry). Delegation briefs live in `out/brief-*.md` **Owner-required, non-delegable:**
 Thu Oct 9 field test (D3); Sat Oct 11 publish click (D1).
 
 ---

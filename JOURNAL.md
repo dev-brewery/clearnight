@@ -311,3 +311,36 @@ offline pinning verified live by orchestrator. 60 tests green. Deviation (self-c
 accepted): first test draft used bare functions; rewritten to unittest.TestCase.
 
 **Next:** T07 sky engine + sky.json recording. Phase 2 begins.
+
+---
+
+## 2026-10-07 — Builder T07 executed & accepted (commit `8d2be02`) — Phase 2 core done
+
+sky.py per ARCHITECTURE §4 (bsp cached + gitignored; SkyUnavailable offline guard;
+sampling helpers take altitude callbacks for offline tests). sky.json recorded live:
+7 nights; orchestrator verified Oct 9 window 01:50–11:25 UTC (9.58 h — plausible
+for 36.85°N early Oct) and Moon 0.26% New, never up, max_alt −18° — D3 Draconids
+precondition met with margin. 72 tests green offline. Builder kept recording script
+in gitignored out/ (flagged, accepted). Tromsø midsummer case auto-skips without bsp.
+
+**Checkpoint (orchestrator):** 9 accepted items today (WO1, T01–T07, T04a), one
+commit each, A12 sign-offs verified every time, suite 0 → 72 tests, tree clean at
+every acceptance. Next: T08 meteors, T09 ISS, then scoring (T13) and the offline
+plan (T14 = A1).
+
+---
+
+## 2026-10-07 (late) — Owner directive: deliver by EOD Friday; T08 accepted
+
+Owner: "You will work this until you deliver the deliverable per my criteria by EOD
+Friday." Orchestrator continues the loop autonomously through T22 + post draft;
+owner-required dates unchanged (Thu field test, Sat publish).
+
+**Builder T08 executed & accepted (commit `4fe5d43`).** 12-shower IMO table +
+meteors.py; 84 tests. Orchestrator verified Draconids record and the ±1-day peak
+boundary live (Oct 8/9/10 True; Oct 7 False; Oct 11 inactive). Deviations accepted:
+radiant_up_hours defaults 0.0 per models (architect wins over brief); year-wrap
+covered synthetically. Convention confirmed: orchestrator artifacts ride the NEXT
+task commit (one-commit lag by design).
+
+**Next:** T09 ISS passes.

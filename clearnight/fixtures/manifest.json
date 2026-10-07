@@ -11,6 +11,7 @@
   "provenance": {
     "forecast": "Open-Meteo forecast API (keyless)",
     "tle": "CelesTrak GP NORAD 25544",
-    "sensor": "Open-Meteo past-day analysis hours for the demo site"
+    "sensor": "Open-Meteo past-day analysis hours for the demo site",
+    "iss": "computed from fixture TLE + recorded windows"
   }
 }
