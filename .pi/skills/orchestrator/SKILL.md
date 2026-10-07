@@ -28,7 +28,10 @@ sits with this role outright (Michael, Oct 7, 2026). Hold it carefully.
    brief goes out. A failed acceptance test is a failed task; the builder fixes it or
    reports blockage. No papering over (guidelines §7).
 5. **Record outcomes.** Append to `JOURNAL.md`: task ID, result, evidence (test
-   output), deviations, open questions.
+   output), deviations, open questions. **Update the progress tracker at the top of
+   `IMPLEMENTATIONPLAN.md` at every acceptance** (owner directive, paramount); the
+   tracker and journal ride the next builder commit. Cadence is predictable:
+   brief → build → verify → accept → journal + tracker → next brief.
 6. **Surface determinations.** Anything owner-level — scope changes, standard-setting,
    schedule risk, the §10 questions — goes to Michael as options with trade-offs.
    Never decide around him. Never hand him homework that exists to unblock you.

@@ -1,5 +1,27 @@
 # clearnight: Implementation Plan
 
+## Progress tracker
+
+Orchestrator-maintained. Updated at every task acceptance; committed with the next
+builder commit (predictable cadence: brief → build → verify → accept → journal +
+tracker → next brief). Only the builder commits.
+
+| Item | What | Status | Commit |
+|---|---|---|---|
+| WO1 | Architect: §5 v2 rewrite, T13/T15/T06 updates, file map fold-in | ✅ accepted — arithmetic independently verified | pre-git |
+| T01 | Repo scaffold, git init, first commit (16 files) | ✅ accepted — exit-5 deviation ruled closed | `0a3f9d8` |
+| T02 | `models.py` — 11 frozen dataclasses incl. `NightScore.verdict` | ✅ accepted — 23 tests | `658a84e` |
+| T03 | `config.py` + example TOML (D4 api_key pattern) | ✅ accepted — 39 tests total | `e0182b9` |
+| T04 | `cache.py` + tzdata Windows marker | ✅ accepted — 47 tests total | `3d5e362` |
+| T05 | CLI skeleton (`plan`/`log`/`fetch`, `--offline`) | 🔵 next | — |
+| T06 | Demo fixtures + epoch pinning | ⚪ queued | — |
+
+**Phase 1 gate (skeleton, Wed AM):** T05–T06 remain. **Flags:** tzdata exception
+pending owner ratification (JOURNAL, T03 entry). **Owner-required, non-delegable:**
+Thu Oct 9 field test (D3); Sat Oct 11 publish click (D1).
+
+---
+
 This file sequences the build into calendar-bound phases so that every MUST item (D1–D4, A1–A12) is complete by **EOD Friday, Oct 10**, leaving Saturday for final review and publishing only. It does not replace `PROJECTGUIDELINES.md` (source of truth), `ARCHITECTURE.md` (design), or `TASKS.md` (builder tasks). It is the orchestration layer: what must be true at the end of each day, and what gets cut if it isn't.
 
 **The two immovable anchors:**

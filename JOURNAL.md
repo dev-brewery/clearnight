@@ -244,3 +244,23 @@ exception under delegation authority; guidelines text left untouched pending own
 ratification (removal = one-line revert if rejected).
 
 **Next:** T04 (disk cache) + tzdata marker.
+
+---
+
+## 2026-10-07 — Owner directive: progress tracker + commit cadence
+
+Owner: "As the orchestrator it is of paramount importance that you update the
+progress tracker as you go and ensure commits are done in a predictable cadence."
+Executed: progress tracker added at the top of IMPLEMENTATIONPLAN.md (per-task status,
+commits, flags, phase-gate position); cadence codified in orchestrator charter and
+AGENTS.md — tracker + journal updated at every acceptance, riding the next builder
+commit (builder remains the only committer, A12).
+
+## 2026-10-07 — Builder T04 executed & accepted (commit `3d5e362`)
+
+Cache per ARCHITECTURE §4: traversal-guarded keys, mtime staleness, None = never
+expires. 47 tests green; tzdata marker added per ruling with journal-cited comment.
+Orchestrator verified live (guard '../evil','a/b',''; roundtrip). Builder self-corrected
+a test expectation against spec (good charter behavior).
+
+**Next:** T05 (CLI skeleton), then T06 (fixtures). Phase 1 gate: T05–T06.

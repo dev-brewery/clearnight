@@ -45,7 +45,9 @@ pi -p -a --no-skills --model <model> --name "<role>-<order>" @.pi/skills/<role>/
 - Briefs reference a `TASKS.md` task or a work order in `JOURNAL.md`. Sub-agents never
   ask questions; blockers are reported in stdout and the orchestrator journals them.
 - The orchestrator verifies every result against its acceptance criteria before the
-  next brief, and records outcomes in `JOURNAL.md`.
+  next brief, and records outcomes in `JOURNAL.md` and the progress tracker atop
+  `IMPLEMENTATIONPLAN.md` — both ride the next builder commit. Cadence: brief →
+  build → verify → accept → journal + tracker → next brief. One task, one commit.
 - Owner-required, non-delegable actions stay flagged in `JOURNAL.md`: the Thursday
   field test (D3) and clicking Publish (D1).
 
