@@ -224,7 +224,7 @@ def generate_brief(
         "model": llm.model,
         "messages": messages,
         "temperature": 0.2,
-        "max_tokens": 400,
+        "max_tokens": llm.max_tokens,
     }).encode("utf-8")
     url = llm.base_url.rstrip("/") + "/chat/completions"
     headers = {"Content-Type": "application/json"}
@@ -241,6 +241,13 @@ def generate_brief(
             with urllib.request.urlopen(req, timeout=llm.timeout_s) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
             content = data["choices"][0]["message"]["content"]
+            if not isinstance(content, str) or not content.strip():
+                # Reasoning models can burn the token budget on thinking
+                # before emitting any answer (T20a). Empty content is a
+                # failed attempt within the same retry budget.
+                last_exc = ValueError("empty LLM content")
+                logger.warning("LLM brief failed: %s", "empty content")
+                continue
             return BriefResult(text=content, source="llm", attempts=1,
                                violations=[])
         except (urllib.error.URLError, urllib.error.HTTPError, OSError,

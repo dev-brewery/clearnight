@@ -73,7 +73,7 @@ def _nights() -> list[Night]:
 
 
 CFG_KEY = LLMCfg("http://llm-box.local/v1", "demo-model",
-                 api_key="sekrit", timeout_s=17)
+                 api_key="sekrit", timeout_s=17, max_tokens=777)
 CFG_NOKEY = LLMCfg("http://llm-box.local/v1", "demo-model", timeout_s=17)
 
 
@@ -178,7 +178,7 @@ class RequestShape(unittest.TestCase):
         self.assertNotIn("//chat", seen["url"])
         self.assertEqual(seen["timeout"], 17)
         self.assertEqual(seen["body"]["temperature"], 0.2)
-        self.assertEqual(seen["body"]["max_tokens"], 400)
+        self.assertEqual(seen["body"]["max_tokens"], 777)
         self.assertEqual(seen["body"]["model"], "demo-model")
         self.assertEqual(len(seen["body"]["messages"]), 2)
 
@@ -270,6 +270,65 @@ class RetryAndFallback(unittest.TestCase):
                                     CFG_NOKEY)
         self.assertIsInstance(result, BriefResult)
         self.assertEqual(result.text, "go at 8:14 pm")
+
+
+class EmptyReplyRetry(unittest.TestCase):
+    """T20a: empty/whitespace content is a failed attempt within the retry
+    budget; the request never carries the old hardcoded 400."""
+
+    def test_empty_then_good_retry_source_llm(self):
+        replies = [_llm_reply(""), _llm_reply("go at 8:14 pm")]
+
+        def urlopen(req, timeout=None):
+            return replies.pop(0)
+
+        with mock.patch("urllib.request.urlopen", urlopen), \
+                self.assertLogs("clearnight.brief", level="WARNING"):
+            result = generate_brief(_nights(), "Black Mesa State Park",
+                                    CFG_KEY)
+        self.assertEqual(result.source, "llm")
+        self.assertEqual(result.text, "go at 8:14 pm")
+
+    def test_whitespace_content_counts_as_empty(self):
+        replies = [_llm_reply("   "), _llm_reply("answer")]
+
+        def urlopen(req, timeout=None):
+            return replies.pop(0)
+
+        with mock.patch("urllib.request.urlopen", urlopen), \
+                self.assertLogs("clearnight.brief", level="WARNING"):
+            result = generate_brief(_nights(), "Black Mesa State Park",
+                                    CFG_KEY)
+        self.assertEqual(result.source, "llm")
+        self.assertEqual(result.text, "answer")
+
+    def test_empty_on_all_attempts_falls_back_to_template(self):
+        def urlopen(req, timeout=None):
+            return _llm_reply("")
+
+        with mock.patch("urllib.request.urlopen", urlopen), \
+                self.assertLogs("clearnight.brief", level="WARNING") as logs:
+            result = generate_brief(_nights(), "Black Mesa State Park",
+                                    CFG_KEY)
+        self.assertEqual(result.source, "template")
+        self.assertEqual(result.attempts, 2)
+        self.assertIn("Template brief (LLM output unavailable",
+                      result.text)
+        joined = "\n".join(logs.output)
+        self.assertNotIn("llm-box.local", joined)
+        self.assertNotIn("sekrit", joined)
+
+    def test_body_never_carries_hardcoded_400(self):
+        seen = {}
+
+        def urlopen(req, timeout=None):
+            seen["body"] = json.loads(req.data.decode("utf-8"))
+            return _llm_reply("ok")
+
+        with mock.patch("urllib.request.urlopen", urlopen):
+            generate_brief(_nights(), "Black Mesa State Park", CFG_KEY)
+        self.assertNotEqual(seen["body"]["max_tokens"], 400)
+        self.assertEqual(seen["body"]["max_tokens"], 777)
 
 
 if __name__ == "__main__":

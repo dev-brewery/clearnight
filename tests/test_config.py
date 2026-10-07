@@ -37,10 +37,12 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(cfg.sensor.path, "clearnight/fixtures/sensor.csv")
         self.assertIsNone(cfg.llm.api_key)
         self.assertEqual(cfg.llm.timeout_s, 30)
+        self.assertEqual(cfg.llm.max_tokens, 2000)
 
     def test_explicit_example_path(self):
         cfg = load_config(str(EXAMPLE))
-        self.assertEqual(cfg.llm.model, "qwen3.8-27b")
+        self.assertEqual(cfg.llm.model,
+                         "/models/Qwen3.8-27B-GGUF/Qwen3.8-27B-Q6_K.gguf")
         self.assertEqual(cfg.cache_dir, Path("cache"))
 
     def test_missing_both_files_names_searched(self):
@@ -79,7 +81,8 @@ class TestMerge(unittest.TestCase):
         self.assertEqual(cfg.site.name, "My Backyard")
         self.assertAlmostEqual(cfg.site.lat, 40.5)
         self.assertAlmostEqual(cfg.site.lon, -102.88)  # untouched
-        self.assertEqual(cfg.llm.model, "qwen3.8-27b")  # llm section intact
+        self.assertEqual(cfg.llm.model,
+                         "/models/Qwen3.8-27B-GGUF/Qwen3.8-27B-Q6_K.gguf")  # llm section intact (T20a served id)
 
 
 class TestValidation(unittest.TestCase):
@@ -164,6 +167,14 @@ model = "m"
         with self.assertRaises(ConfigError) as cm:
             write_and_load(toml)
         self.assertIn("sensor.timeout_s", str(cm.exception))
+
+    def test_llm_max_tokens_must_be_positive_int(self):
+        for bad in ("max_tokens = 0", "max_tokens = -5", 'max_tokens = "lots"'):
+            toml = self.BASE.replace('model = "m"',
+                                     f'model = "m"\n{bad}')
+            with self.assertRaises(ConfigError) as cm:
+                write_and_load(toml)
+            self.assertIn("llm.max_tokens", str(cm.exception))
 
 
 if __name__ == "__main__":

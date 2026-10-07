@@ -38,6 +38,9 @@ class LLMCfg:
     model: str
     api_key: str | None = None
     timeout_s: int = 30
+    # Reasoning models spend tokens on thinking before the answer; a small
+    # budget yields finish_reason "length" with empty content (T20a).
+    max_tokens: int = 2000
 
 
 @dataclass(frozen=True)
@@ -128,7 +131,11 @@ def _validate(site: dict[str, Any], sensor: dict[str, Any], llm: dict[str, Any],
     api_key = llm.get("api_key")
     if api_key is not None and not isinstance(api_key, str):
         raise _err("llm.api_key", "must be a string")
-    llm_cfg = LLMCfg(str(llm["base_url"]), str(llm["model"]), api_key, ltimeout)
+    max_tokens = llm.get("max_tokens", 2000)
+    if not isinstance(max_tokens, int) or isinstance(max_tokens, bool) or max_tokens <= 0:
+        raise _err("llm.max_tokens", "must be a positive int")
+    llm_cfg = LLMCfg(str(llm["base_url"]), str(llm["model"]), api_key,
+                     ltimeout, max_tokens)
 
     for name, v in (("cache_dir", cache_dir), ("out_dir", out_dir)):
         if v is not None and not isinstance(v, (str, Path)):

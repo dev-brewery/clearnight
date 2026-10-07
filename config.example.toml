@@ -28,7 +28,9 @@ path = "clearnight/fixtures/sensor.csv"
 
 [llm]
 base_url = "http://llmbox.internal:8080/v1"
-model = "qwen3.8-27b"
+model = "/models/Qwen3.8-27B-GGUF/Qwen3.8-27B-Q6_K.gguf"
 timeout_s = 30
+# Reasoning models spend tokens on thinking before the answer; 400 strangled Qwen3.8 - measured live Oct 8
+max_tokens = 2000
 # api_key lives ONLY in config.local.toml — never commit it to this file.
 # api_key = "sk-..."
