@@ -1,0 +1,126 @@
+{
+  "_source": "https://www.imo.net/resources/calendar/",
+  "_note": "Values condensed from the IMO 2026 Meteor Shower Calendar. Peaks are approximations; ZHR is the calendar's maximum. Committed file is the source of truth for clearnight tests.",
+  "showers": [
+    {
+      "name": "Quadrantids",
+      "peak_utc": "2026-01-03T21:00:00Z",
+      "active_start": "12-28",
+      "active_end": "01-12",
+      "zhr": 110,
+      "radiant_ra_deg": 230,
+      "radiant_dec_deg": 49,
+      "parent": "2003 EH1"
+    },
+    {
+      "name": "Lyrids",
+      "peak_utc": "2026-04-22T14:00:00Z",
+      "active_start": "04-16",
+      "active_end": "04-25",
+      "zhr": 18,
+      "radiant_ra_deg": 271,
+      "radiant_dec_deg": 34,
+      "parent": "C/1861 G1 Thatcher"
+    },
+    {
+      "name": "eta-Aquariids",
+      "peak_utc": "2026-05-06T02:00:00Z",
+      "active_start": "04-19",
+      "active_end": "05-28",
+      "zhr": 50,
+      "radiant_ra_deg": 338,
+      "radiant_dec_deg": -1,
+      "parent": "1P/Halley"
+    },
+    {
+      "name": "Southern delta-Aquariids",
+      "peak_utc": "2026-07-30T14:00:00Z",
+      "active_start": "07-12",
+      "active_end": "08-23",
+      "zhr": 25,
+      "radiant_ra_deg": 339,
+      "radiant_dec_deg": -16,
+      "parent": "96P/Machholz complex"
+    },
+    {
+      "name": "Perseids",
+      "peak_utc": "2026-08-12T22:00:00Z",
+      "active_start": "07-17",
+      "active_end": "08-24",
+      "zhr": 100,
+      "radiant_ra_deg": 48,
+      "radiant_dec_deg": 58,
+      "parent": "109P/Swift-Tuttle"
+    },
+    {
+      "name": "Draconids",
+      "peak_utc": "2026-10-09T00:00:00Z",
+      "active_start": "10-06",
+      "active_end": "10-10",
+      "zhr": 10,
+      "radiant_ra_deg": 262,
+      "radiant_dec_deg": 54,
+      "parent": "21P/Giacobini-Zinner"
+    },
+    {
+      "name": "Orionids",
+      "peak_utc": "2026-10-21T18:00:00Z",
+      "active_start": "10-02",
+      "active_end": "11-12",
+      "zhr": 20,
+      "radiant_ra_deg": 95,
+      "radiant_dec_deg": 16,
+      "parent": "1P/Halley"
+    },
+    {
+      "name": "Southern Taurids",
+      "peak_utc": "2026-11-05T00:00:00Z",
+      "active_start": "10-10",
+      "active_end": "11-20",
+      "zhr": 5,
+      "radiant_ra_deg": 52,
+      "radiant_dec_deg": 14,
+      "parent": "2P/Encke complex"
+    },
+    {
+      "name": "Northern Taurids",
+      "peak_utc": "2026-11-12T00:00:00Z",
+      "active_start": "10-20",
+      "active_end": "12-10",
+      "zhr": 5,
+      "radiant_ra_deg": 58,
+      "radiant_dec_deg": 22,
+      "parent": "2P/Encke complex"
+    },
+    {
+      "name": "Leonids",
+      "peak_utc": "2026-11-17T06:00:00Z",
+      "active_start": "11-06",
+      "active_end": "11-30",
+      "zhr": 10,
+      "radiant_ra_deg": 152,
+      "radiant_dec_deg": 22,
+      "parent": "55P/Tempel-Tuttle"
+    },
+    {
+      "name": "Geminids",
+      "peak_utc": "2026-12-14T06:00:00Z",
+      "active_start": "12-04",
+      "active_end": "12-20",
+      "zhr": 150,
+      "radiant_ra_deg": 112,
+      "radiant_dec_deg": 33,
+      "parent": "3200 Phaethon"
+    },
+    {
+      "name": "Ursids",
+      "peak_utc": "2026-12-22T04:00:00Z",
+      "active_start": "12-17",
+      "active_end": "12-26",
+      "zhr": 10,
+      "radiant_ra_deg": 217,
+      "radiant_dec_deg": 76,
+      "parent": "8P/Tuttle"
+    }
+  ]
+}
