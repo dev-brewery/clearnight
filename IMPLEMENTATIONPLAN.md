@@ -26,7 +26,13 @@ tracker → next brief). Only the builder commits.
 | T14 | Assemble nights + offline plan — **A1 gate** | ✅ accepted — 165 tests; live plan verified (Oct 8: 100 PRIME) | `58da4a1` |
 | T15 | HTML render (red-on-black) + text summary polish | ✅ accepted — 176 tests; self-contained page verified | `b2fb089` |
 | T16 | Online path (live fetch/sensor/TLE through cache) — **A2 core** | ✅ accepted — live smoke verified; cache-through proven | `f5c4bea` |
-| T17 | Field log (`log` command + plan integration) — **A9** | 🔵 in flight | — |
+| T17 | Field log (`log` command + plan integration) — **A9** | ✅ accepted — 190 tests; FIELD LOG block verified end-to-end | `9c8775e` |
+| — | **Post draft started** (POST_DRAFT.md — sections 1, 4, 5 drafted from real build facts) | ✅ Wed milestone | rides next commit |
+| T18 | Brief generation (prompt build + LLM call) | 🔵 next | — |
+| T19 | Verifier + retry/fallback — **A6/A7** | ⚪ queued | — |
+| T20 | Brief wired into online plan | ⚪ queued | — |
+| T21 | README + screenshots | ⚪ queued | — |
+| T22 | QA sweep: accuracy check (A4), audits (A11/A12), fresh-clone A1 | ⚪ queued | — |
 
 **Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky core):
 ✅ T07 accepted. Phase 3 (events): ✅ COMPLETE (T08–T09). Phase 4 (weather/sensor)

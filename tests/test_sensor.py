@@ -144,6 +144,90 @@ class TestHttpJsonAdapter(unittest.TestCase):
         self.assertEqual(seen["ua"], "clearnight/0.1")
 
 
+class TestHttpHeadersAndHAFormat(unittest.TestCase):
+    """T11b: auth headers + HA-shaped body with offset-microsecond timestamp."""
+
+    HA_BODY = json.dumps({
+        "state": "ok",
+        "last_updated": "2026-10-07T21:11:27.618857+00:00",
+        "attributes": {
+            "temperature_c": 15.4,
+            "humidity_pct": 55,
+            "pressure_hpa": 1013.2,
+            "dew_point_c": 6.6,
+        },
+    }).encode("utf-8")
+
+    FMAP = {"timestamp": "last_updated",
+            "temperature": "attributes.temperature_c",
+            "humidity": "attributes.humidity_pct",
+            "pressure": "attributes.pressure_hpa",
+            "dew_point": "attributes.dew_point_c"}
+
+    def test_ha_shape_offset_microseconds(self):
+        with mock.patch.object(urllib.request, "urlopen",
+                               mock.mock_open(read_data=self.HA_BODY)):
+            readings = HttpJsonAdapter("http://x", self.FMAP).read_recent(6, NOW)
+        self.assertEqual(len(readings), 1)
+        r = readings[0]
+        self.assertEqual(r.timestamp_utc,
+                         dt.datetime(2026, 10, 7, 21, 11, 27, 618857, tzinfo=UTC))
+        self.assertEqual(r.temperature_c, 15.4)
+        self.assertEqual(r.humidity_pct, 55.0)
+        self.assertEqual(r.pressure_hpa, 1013.2)
+        self.assertEqual(r.dew_point_c, 6.6)
+
+    def test_z_suffix_still_parses(self):
+        body = json.dumps({"last_updated": "2026-10-07T22:00:00Z"}).encode("utf-8")
+        with mock.patch.object(urllib.request, "urlopen",
+                               mock.mock_open(read_data=body)):
+            readings = HttpJsonAdapter("http://x", {"timestamp": "last_updated"}
+                                       ).read_recent(6, NOW)
+        self.assertEqual(readings[0].timestamp_utc, dt.datetime(2026, 10, 7, 22, 0, tzinfo=UTC))
+
+    def test_missing_humidity_is_none(self):
+        body = json.dumps({"attributes": {"temperature_c": 15.0}}).encode("utf-8")
+        with mock.patch.object(urllib.request, "urlopen",
+                               mock.mock_open(read_data=body)):
+            readings = HttpJsonAdapter("http://x", {"temperature": "attributes.temperature_c"}
+                                       ).read_recent(6, NOW)
+        self.assertIsNone(readings[0].humidity_pct)
+
+    def test_auth_header_reaches_request(self):
+        seen = {}
+        def fake_urlopen(req, timeout):
+            seen["auth"] = req.headers.get("Authorization")
+            raise urllib.error.URLError("stop")
+        with mock.patch.object(urllib.request, "urlopen", fake_urlopen):
+            HttpJsonAdapter("http://x", self.FMAP, headers={"Authorization": "Bearer test-token"}
+                            ).read_recent(6, NOW)
+        self.assertEqual(seen["auth"], "Bearer test-token")
+
+    def test_no_headers_no_auth(self):
+        seen = {}
+        def fake_urlopen(req, timeout):
+            seen["auth"] = req.headers.get("Authorization")
+            raise urllib.error.URLError("stop")
+        with mock.patch.object(urllib.request, "urlopen", fake_urlopen):
+            HttpJsonAdapter("http://x", self.FMAP).read_recent(6, NOW)
+        self.assertIsNone(seen["auth"])
+
+    def test_401_warning_names_only_class(self):
+        def unauthorized(req, timeout):
+            raise urllib.error.HTTPError("http://secret-host/x", 401, "Unauthorized",
+                                         None, io.BytesIO(b""))
+        with mock.patch.object(urllib.request, "urlopen", unauthorized):
+            with self.assertWarns(UserWarning) as ctx:
+                readings = HttpJsonAdapter("http://secret-host/x", self.FMAP,
+                                           headers={"Authorization": "Bearer test-token"}
+                                           ).read_recent(6, NOW)
+        text = str(ctx.warning)
+        self.assertIn("HTTPError", text)
+        self.assertNotIn("Bearer test-token", text)
+        self.assertNotIn("secret-host", text)
+        self.assertEqual(readings, [])
+
+
 class TestFactory(unittest.TestCase):
     def test_both_kinds_constructed_from_cfg(self):
         a = make_adapter(CSV_CFG)

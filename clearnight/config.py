@@ -27,6 +27,9 @@ class SensorCfg:
     url: str | None = None
     field_map: dict[str, str] | None = None
     timeout_s: int = 10
+    # Extra HTTP headers (e.g. Authorization). config.local.toml ONLY — never
+    # commit tokens. TOML table [sensor.headers]. Keys and values must be str.
+    headers: dict[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -104,8 +107,15 @@ def _validate(site: dict[str, Any], sensor: dict[str, Any], llm: dict[str, Any],
     timeout = sensor.get("timeout_s", 10)
     if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0:
         raise _err("sensor.timeout_s", "must be a positive int")
+    headers = sensor.get("headers")
+    if headers is not None:
+        if not isinstance(headers, dict):
+            raise _err("sensor.headers", "must be a [table] of header-name -> value")
+        for k, v in headers.items():
+            if not isinstance(k, str) or not isinstance(v, str):
+                raise _err("sensor.headers", "header names and values must be strings")
     sensor_cfg = SensorCfg(kind, sensor.get("path"), sensor.get("url"),
-                           sensor.get("field_map"), timeout)
+                           sensor.get("field_map"), timeout, headers)
 
     for f in ("base_url", "model"):
         if not llm.get(f):

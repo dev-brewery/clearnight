@@ -22,6 +22,9 @@ path = "clearnight/fixtures/sensor.csv"
 # url = "http://your-station/api/latest"
 # field_map = { temperature = "temperature_c", humidity = "humidity_pct", pressure = "pressure_hpa", dew_point = "dew_point_c" }
 # timeout_s = 10
+# Auth headers if the endpoint needs them (config.local.toml ONLY, never commit):
+# [sensor.headers]
+# Authorization = "Bearer <long-lived token - config.local.toml ONLY, never commit>"
 
 [llm]
 base_url = "http://llmbox.internal:8080/v1"

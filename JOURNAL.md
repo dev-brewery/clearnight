@@ -448,3 +448,39 @@ bsp tests copy local cache or skip. `py -m clearnight plan` is ready for Michael
 real-site run Thursday (needs his config.local.toml with home site + HA sensor).
 
 **Next:** T17 field log (A9 - Thursday-night evidence capture).
+
+---
+
+## 2026-10-08 — Builder T17 executed & accepted (commit `9c8775e`); post draft STARTED
+
+fieldlog.py + log subcommand + FIELD LOG blocks in both renders, latest-wins on
+duplicate dates. 190 tests. Orchestrator verified end-to-end in a fresh tmp dir:
+log --date 2026-10-09 ... then plan --offline shows the block beside the Oct 9
+prediction - exactly the D3 evidence format. Minor for T22: one fieldlog test
+leaks subprocess stdout into the suite output (cosmetic).
+
+**POST DRAFT STARTED (Wed milestone, on time):** POST_DRAFT.md - sections 1, 4, 5
+fully drafted from real build facts; 2/3/6 wait on field-test screenshots and
+freeze; Thursday field-test template ready with on-file facts (9.6 h darkness,
+0.26% New Moon never up, 0% fixture cloud). Draft rides commits from T18 on.
+
+**Next:** T18 brief generation, T19 verifier (A6/A7), T20 integration. Then
+T21 docs/screenshots, T22 QA. Thursday reminders for owner: config.local.toml
+(home site + HA sensor) before dusk; field test + log that night.
+
+---
+
+## 2026-10-08 — Owner's HA agent: mock endpoints live; T11b briefed (auth gap)
+
+Owner ran a delegated agent on the HA VM (ha.internal:8123). Four preset mock
+entities verified 200: _dry (spread 11.3 -> low), _dewy (1.2 -> high), _falling,
+_broken (humidity absent). Live-captured timestamp format:
+2026-10-07T21:11:27.618857+00:00. Orchestrator verified in-process:
+fromisoformat parses it (3.12), dotted-path mapping works on nested attributes,
+missing fields -> None. REAL GAP FOUND: adapter sends no Authorization header -
+all Bearer-protected endpoints degrade to []. T11b micro-brief issued: optional
+[sensor.headers] config + adapter support + HA-format regression tests +
+warning-hygiene assertions. Also planned: out/verify_sensor_endpoint.py local
+one-command tool (token via env, never through repo/orchestrator) for the owner's
+pre-Thursday check. Owner's config.local.toml still needs [site] (owner-only
+hands) and optionally [llm].

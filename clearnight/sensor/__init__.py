@@ -30,5 +30,6 @@ def make_adapter(cfg: SensorCfg) -> SensorAdapter:
         return CSVAdapter(Path(cfg.path))  # type: ignore[arg-type]
     if cfg.kind == "http_json":
         from clearnight.sensor.http_json import HttpJsonAdapter
-        return HttpJsonAdapter(cfg.url, cfg.field_map, cfg.timeout_s)  # type: ignore[arg-type]
+        return HttpJsonAdapter(cfg.url, cfg.field_map, cfg.timeout_s,  # type: ignore[arg-type]
+                               cfg.headers)
     raise ValueError(f"unknown sensor kind: {cfg.kind!r}")
