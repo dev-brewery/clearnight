@@ -20,11 +20,11 @@ from __future__ import annotations
 import datetime as dt
 import html
 import textwrap
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from zoneinfo import ZoneInfo
 
 from clearnight.config import Site
-from clearnight.models import Night
+from clearnight.models import FieldLogEntry, Night
 
 TEMPLATE_BRIEF_LABEL = (
     "Template brief (LLM output unavailable or failed verification; "
@@ -43,6 +43,7 @@ class Plan:
     reference_label: str  # e.g. "2026-10-07"
     ranked: list[Night]
     notes: tuple[str, ...] = ()  # provenance/staleness footer lines
+    field_log: dict = field(default_factory=dict)  # date_local -> FieldLogEntry
 
 
 def _to_local(when: dt.datetime | None, tz: ZoneInfo) -> dt.datetime | None:
@@ -131,6 +132,18 @@ def _night_block(night: Night, tz: ZoneInfo) -> list[str]:
     return lines
 
 
+def _fieldlog_lines(entry: FieldLogEntry) -> list[str]:
+    """The FIELD LOG block lines (without the 'FIELD LOG:' header)."""
+    return [
+        f"went out: {'yes' if entry.went_out else 'no'}"
+        f" | clearness {entry.clearness}/5"
+        f" | meteors counted: {entry.meteors_counted}"
+        f" | ISS seen: {'yes' if entry.iss_seen else 'no'}",
+        f"notes: {entry.notes}" if entry.notes else "notes: (none)",
+        f"recorded-at: {entry.recorded_utc.isoformat()}",
+    ]
+
+
 def _wrap78(text: str) -> list[str]:
     return textwrap.wrap(text, width=78, subsequent_indent="  ",
                          break_long_words=False, break_on_hyphens=False)
@@ -185,6 +198,10 @@ def render_text(plan: Plan) -> str:
     lines.append("")
     for night in plan.ranked:
         lines.extend(_night_block(night, tz))
+        entry = plan.field_log.get(night.date_local)
+        if entry is not None:
+            lines.append("  FIELD LOG:")
+            lines.extend("    " + l for l in _fieldlog_lines(entry))
         lines.append("")
     lines.extend(_template_brief(plan.ranked, tz))
     lines.append("")
@@ -280,7 +297,14 @@ def render_html(plan: Plan) -> str:
             parts.append(f"<dd>{esc(line)}</dd>")
         for line in _iss_lines(night, tz):
             parts.append(f"<dd>{esc(line)}</dd>")
-        parts.append("</dl></section>")
+        parts.append("</dl>")
+        entry = plan.field_log.get(night.date_local)
+        if entry is not None:
+            parts.append('<p class="fieldlog">FIELD LOG:</p><ul>')
+            for line in _fieldlog_lines(entry):
+                parts.append(f"<li>{esc(line)}</li>")
+            parts.append("</ul>")
+        parts.append("</section>")
     parts.append(f"<h2>Brief</h2><p>{esc(_wrapped_label()[0])} "
                  f"{esc(_wrapped_label()[1].strip())}</p><ul>")
     for line in _template_brief(plan.ranked, tz)[2:]:

@@ -8,7 +8,8 @@ T14: `plan --offline` assembles the full night plan from committed fixtures
 delegates. T16: `plan` (no --offline) runs the ONLINE path: live sky from the
 cached ephemeris, live Open-Meteo forecast through the cache, real sensor
 adapter, fresh TLE + computed ISS passes — every source with its fallback
-chain, provenance collected into the footer. `log` lands in T17.
+chain, provenance collected into the footer. T17: `log` appends a field-log
+entry; both plan paths render FIELD LOG blocks for logged nights.
 """
 
 from __future__ import annotations
@@ -22,16 +23,16 @@ import urllib.request
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from clearnight import fixtures, render
+from clearnight import fieldlog, fixtures, render
 from clearnight.cache import Cache
 from clearnight.config import Config, ConfigError, load_config
 from clearnight.conditions import assess
 from clearnight.forecast import cache_key, fetch_hourly, slice_to_window
 from clearnight.iss import TLE_MAX_AGE_S, load_tle, visible_passes
 from clearnight.meteors import events_for_night, load_showers
-from clearnight.models import DarkWindow, MoonInfo, Night
+from clearnight.models import DarkWindow, FieldLogEntry, MoonInfo, Night
 from clearnight.models import ISSPass as ISSPassModel
-from clearnight.render import TEMPLATE_BRIEF_LABEL, Plan
+from clearnight.render import TEMPLATE_BRIEF_LABEL
 from clearnight.sensor import make_adapter
 from clearnight.score import rank, score_night
 from clearnight.sky import (
@@ -43,7 +44,6 @@ from clearnight.sky import (
     radiant_up_hours,
 )
 
-LOG_MSG = "log: not implemented until T17"
 FETCH_MSG = "fetch: not implemented until T06"
 FIXTURES_SKY = Path(__file__).parent / "fixtures" / "sky.json"
 
@@ -63,6 +63,8 @@ def _build_parser() -> argparse.ArgumentParser:
                         help="number of nights, 1-14 (overrides config)")
 
     p_log = sub.add_parser("log", help="append a field-log entry")
+    p_log.add_argument("--config", default=None, metavar="PATH",
+                       help="explicit config file (else config.local.toml over config.example.toml)")
     p_log.add_argument("--date", required=True, metavar="YYYY-MM-DD")
     p_log.add_argument("--went-out", action="store_true")
     p_log.add_argument("--clearness", type=int, choices=range(0, 6), default=None, metavar="0-5")
@@ -167,16 +169,29 @@ def run_plan(argv: list[str]) -> int:
                             night_showers, passes, score))
 
     ranked = rank(nights)
-    plan = Plan(site=cfg.site, mode="OFFLINE fixture epoch",
-                reference_label=today.isoformat(), ranked=ranked,
-                notes=("sources: committed fixtures (Open-Meteo, CelesTrak, "
-                       "NASA JPL de421.bsp; pinned reference date)"))
+    plan = _make_plan(cfg, ranked, "OFFLINE fixture epoch", today.isoformat(),
+                      ("sources: committed fixtures (Open-Meteo, CelesTrak, "
+                       "NASA JPL de421.bsp; pinned reference date)",))
     out_dir = Path(cfg.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "plan.html").write_text(render.render_html(plan),
                                        encoding="utf-8")
     print(render.render_text(plan), end="")
     return 0
+
+
+def _make_plan(cfg: Config, ranked: list, mode: str, ref: str,
+               notes) -> render.Plan:
+    """Build the render Plan with field-log entries matched to nights (T17)."""
+    entries = fieldlog.read_entries(cfg.out_dir)
+    log_by_date = {
+        night.date_local: entry
+        for night, entry in fieldlog.match_to_nights(ranked, entries)
+        if entry is not None
+    }
+    return render.Plan(site=cfg.site, mode=mode, reference_label=ref,
+                       ranked=ranked, notes=tuple(notes),
+                       field_log=log_by_date)
 
 
 # -------------------------------------------------------------- online ----
@@ -327,9 +342,7 @@ def _run_plan_online(cfg: Config, args: argparse.Namespace) -> int:
                             night_showers, passes, score))
 
     ranked = rank(nights)
-    plan = Plan(site=cfg.site, mode="ONLINE live",
-                reference_label=today.isoformat(), ranked=ranked,
-                notes=tuple(notes))
+    plan = _make_plan(cfg, ranked, "ONLINE live", today.isoformat(), notes)
     out_dir = Path(cfg.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "plan.html").write_text(render.render_html(plan),
@@ -338,8 +351,27 @@ def _run_plan_online(cfg: Config, args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_log(_args: argparse.Namespace) -> int:
-    print(LOG_MSG)
+def _cmd_log(args: argparse.Namespace) -> int:
+    """T17: append one field-log entry to out/fieldlog.jsonl."""
+    try:
+        cfg = load_config(args.config if hasattr(args, "config") else None)
+    except ConfigError as e:
+        print(f"config error: {e}", file=sys.stderr)
+        return 1
+    entry = FieldLogEntry(
+        date_local=dt.date.fromisoformat(args.date),
+        went_out=args.went_out,
+        clearness=args.clearness if args.clearness is not None else 0,
+        meteors_counted=args.meteors if args.meteors is not None else 0,
+        iss_seen=args.iss_seen,
+        notes=args.notes if args.notes is not None else "",
+        recorded_utc=dt.datetime.now(dt.timezone.utc),
+    )
+    fieldlog.append_entry(Path(cfg.out_dir), entry)
+    print(f"logged {entry.date_local.isoformat()}: "
+          f"went_out={entry.went_out} clearness={entry.clearness}/5 "
+          f"meteors={entry.meteors_counted} iss_seen={entry.iss_seen} "
+          f"-> {fieldlog.log_path(Path(cfg.out_dir))}")
     return 0
 
 

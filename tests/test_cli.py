@@ -48,12 +48,16 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("OFFLINE fixture epoch", r.stdout)
 
-    def test_log_stub_exits_0(self) -> None:
+    def test_log_appends_entry_exits_0(self) -> None:
+        # T17: the stub is gone; log appends to out/fieldlog.jsonl.
         r = run_cli("log", "--date", "2026-10-10", "--went-out",
                     "--clearness", "4", "--meteors", "2", "--iss-seen",
                     "--notes", "test", cwd=self.tmp)
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertIn("log: not implemented until T17", r.stdout)
+        self.assertIn("logged 2026-10-10", r.stdout)
+        lines = (self.tmp / "out" / "fieldlog.jsonl").read_text(
+            encoding="utf-8").splitlines()
+        self.assertEqual(len(lines), 1)
 
     def test_fetch_stub_exits_0(self) -> None:
         r = run_cli("fetch", cwd=self.tmp)

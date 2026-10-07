@@ -435,3 +435,16 @@ phone-first sizing, escaping) + 80-col text with the wrapped A7 label. 176 tests
 Orchestrator verified live: 6.1 KB html, no external requests, all nights/verdicts,
 0 text lines > 80. A1 now complete WITH the polish. CRITICAL PATH: T16 online path
 must land before Thu dusk (Michael's real plan). Post draft starts now (orchestrator).
+
+---
+
+## 2026-10-08 — Builder T16 executed & accepted (commit `f5c4bea`) — THURSDAY GATE SECURED
+
+Online path live: real site-tz today, live sky via cached bsp, forecast + TLE
+through cache with source/staleness provenance footer, real sensor adapter, live
+radiant-up + ISS computation. Orchestrator ran it twice: second run all-cache, no
+network (header ONLINE live, footer lists each source). Tests offline w/ mocks;
+bsp tests copy local cache or skip. `py -m clearnight plan` is ready for Michael's
+real-site run Thursday (needs his config.local.toml with home site + HA sensor).
+
+**Next:** T17 field log (A9 - Thursday-night evidence capture).
