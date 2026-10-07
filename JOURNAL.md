@@ -224,3 +224,23 @@ orchestrator's uncommitted JOURNAL.md edits. Convention from T03: builder commit
 include JOURNAL.md so the repo carries the log.
 
 **Next:** T03 (config loading), then T04 (cache), T05 (CLI skeleton).
+
+---
+
+## 2026-10-07 — Builder T03 executed & accepted (commit `e0182b9`); tzdata ruling
+
+Config module + example TOML per ARCHITECTURE §4 incl. D4 (optional api_key,
+commented, config.local.toml-only note). 39 tests total green; orchestrator re-ran
+suite, spot-checked Black Mesa values + api_key guidance. JOURNAL.md now rides task
+commits (convention set).
+
+**ORCHESTRATOR RULING — tzdata exception (FLAGGED FOR OWNER RATIFICATION):** Windows
+has no system tz database; stdlib zoneinfo requires the `tzdata` package. Builder
+surfaced it correctly without scope-creeping pyproject. Ruling: add
+`tzdata; platform_system == "Windows"` to pyproject in T04 — zero impact on
+Linux/macOS/CI, stdlib-endorsed data-only package. Tension with guidelines §4
+("dependencies limited to skyfield") acknowledged: recorded here as an interim
+exception under delegation authority; guidelines text left untouched pending owner
+ratification (removal = one-line revert if rejected).
+
+**Next:** T04 (disk cache) + tzdata marker.

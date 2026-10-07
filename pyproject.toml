@@ -12,6 +12,8 @@ license = { file = "LICENSE" }
 authors = [{ name = "dev-brewery contributors" }]
 dependencies = [
     "skyfield==1.49.0",
+    # JOURNAL.md ruling: Windows has no system tz database; stdlib zoneinfo needs it.
+    "tzdata; platform_system == \"Windows\"",
 ]
 
 [project.scripts]
