@@ -22,12 +22,13 @@ tracker → next brief). Only the builder commits.
 | T10 | Open-Meteo forecast client + window slicing | ✅ accepted — 112 tests; live slice check (Oct 9 window: 0% cloud) | `c3701b6` |
 | T11 | Sensor adapters (csv + http_json) + factory | ✅ accepted — 124 tests; A8 config-switch asserted | `0d79e87` |
 | T12 | Conditions (dew risk, pressure trend, forecast-vs-actual) | ✅ accepted — 138 tests; live assess check | `2102d3b` |
-| T13 | Pure scoring (ratified D5 v2) + verdict bands — **A5 gate** | 🔵 in flight | — |
-| T14 | Assemble nights + offline plan — **A1 gate** | ⚪ queued | — |
+| T13 | Pure scoring (ratified D5 v2) + verdict bands — **A5 gate** | ✅ accepted — 157 tests; live week preview: 96 PRIME → 15 STAY IN BED | `ba20985` |
+| T14 | Assemble nights + offline plan — **A1 gate** | 🔵 in flight | — |
+| T15 | HTML render (red-on-black) + text summary | ⚪ queued | — |
 
 **Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky core):
 ✅ T07 accepted. Phase 3 (events): ✅ COMPLETE (T08–T09). Phase 4 (weather/sensor)
-in flight: T10–T12. ✅ COMPLETE. Phase 5 (scoring) in flight: T13. **Flags:** tzdata exception pending
+in flight: T10–T12. ✅ COMPLETE. Phase 5 (scoring) in flight: T13. ✅ COMPLETE (A5). Phase 6 milestone: T14 in flight — the A1 gate. **Flags:** tzdata exception pending
 owner ratification (JOURNAL, T03 entry). Delegation briefs live in `out/brief-*.md` **Owner-required, non-delegable:**
 Thu Oct 9 field test (D3); Sat Oct 11 publish click (D1).
 

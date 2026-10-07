@@ -31,19 +31,19 @@ class TestCLI(unittest.TestCase):
         r = run_cli("plan", "--offline", cwd=self.tmp)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("Black Mesa State Park (demo)", r.stdout)
-        self.assertIn("OFFLINE (fixture epoch)", r.stdout)
-        self.assertIn("placeholder plan - real pipeline lands in T14", r.stdout)
+        self.assertIn("OFFLINE fixture epoch", r.stdout)
+        self.assertTrue((self.tmp / "out" / "plan.html").is_file())
 
     def test_plan_nights_override(self) -> None:
         r = run_cli("plan", "--offline", "--nights", "3", cwd=self.tmp)
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertIn("nights: 3", r.stdout)
+        self.assertIn("3 nights, ranked", r.stdout)
 
     def test_plan_explicit_config(self) -> None:
         r = run_cli("plan", "--config", str(self.tmp / "config.example.toml"),
                     cwd=self.tmp)
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertIn("Black Mesa State Park (demo)", r.stdout)
+        self.assertIn("online mode wiring lands in T16", r.stdout)
 
     def test_log_stub_exits_0(self) -> None:
         r = run_cli("log", "--date", "2026-10-10", "--went-out",

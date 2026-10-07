@@ -394,3 +394,17 @@ forecast-vs-actual string. 138 tests. Live check on fixture: 43 readings, spread
 (one-off; T13 brief restates the convention - lag absorbed).
 
 **Next:** T13 scoring - the D5 v2 formula, A5 gate.
+
+---
+
+## 2026-10-07 (night) — Builder T13 executed & accepted (commit `ba20985`) — A5 GATE PASSED
+
+score.py implements ARCHITECTURE §5 verbatim; tests mirror the WO1-updated T13
+acceptance clause by clause (157 tests). Orchestrator live INTEGRATION PREVIEW on
+the real fixture week (no showers wired yet): Oct 7 -> 77 WORTH IT, Oct 8 -> 96
+PRIME, Oct 9 -> 77 (Draconids +6 lands in T14), Oct 10 -> 57, Oct 11 -> 75, Oct
+12/13 -> 15 STAY IN BED (overcast cap fired - the fixture forecast clouded out the
+weekend). The engine discriminates on real data. Builder self-caught a test bug
+against §5 arithmetic (cap variant uses Example A's moon).
+
+**Next:** T14 - assemble the offline plan. THE A1 GATE.
