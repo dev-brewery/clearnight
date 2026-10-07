@@ -5,7 +5,10 @@ T06: `fetch --record-fixtures` records the demo fixture set from the live APIs
 T14: `plan --offline` assembles the full night plan from committed fixtures
 (no network, no LLM; template brief). T15: rendering moved to clearnight.render
 (red-on-black HTML + <=80-col text); this module builds the Plan structure and
-delegates. Online wiring lands in T16; `log` lands in T17.
+delegates. T16: `plan` (no --offline) runs the ONLINE path: live sky from the
+cached ephemeris, live Open-Meteo forecast through the cache, real sensor
+adapter, fresh TLE + computed ISS passes — every source with its fallback
+chain, provenance collected into the footer. `log` lands in T17.
 """
 
 from __future__ import annotations
@@ -23,20 +26,25 @@ from clearnight import fixtures, render
 from clearnight.cache import Cache
 from clearnight.config import Config, ConfigError, load_config
 from clearnight.conditions import assess
-from clearnight.forecast import fetch_hourly, slice_to_window
+from clearnight.forecast import cache_key, fetch_hourly, slice_to_window
+from clearnight.iss import TLE_MAX_AGE_S, load_tle, visible_passes
 from clearnight.meteors import events_for_night, load_showers
 from clearnight.models import DarkWindow, MoonInfo, Night
 from clearnight.models import ISSPass as ISSPassModel
 from clearnight.render import TEMPLATE_BRIEF_LABEL, Plan
 from clearnight.sensor import make_adapter
 from clearnight.score import rank, score_night
+from clearnight.sky import (
+    BSP_NAME,
+    SkyUnavailable,
+    dark_windows,
+    load_ephemeris,
+    moon_info,
+    radiant_up_hours,
+)
 
 LOG_MSG = "log: not implemented until T17"
 FETCH_MSG = "fetch: not implemented until T06"
-ONLINE_MSG = (
-    "plan: online mode wiring lands in T16 "
-    "(offline mode against fixtures is implemented)"
-)
 FIXTURES_SKY = Path(__file__).parent / "fixtures" / "sky.json"
 
 
@@ -88,8 +96,7 @@ def run_plan(argv: list[str]) -> int:
         print(f"config error: {e}", file=sys.stderr)
         return 1
     if not args.offline:
-        print(ONLINE_MSG)
-        return 0
+        return _run_plan_online(cfg, args)
 
     n = args.nights if args.nights is not None else cfg.nights
     tz = ZoneInfo(cfg.site.tz_name)
@@ -161,7 +168,168 @@ def run_plan(argv: list[str]) -> int:
 
     ranked = rank(nights)
     plan = Plan(site=cfg.site, mode="OFFLINE fixture epoch",
-                reference_label=today.isoformat(), ranked=ranked)
+                reference_label=today.isoformat(), ranked=ranked,
+                notes=("sources: committed fixtures (Open-Meteo, CelesTrak, "
+                       "NASA JPL de421.bsp; pinned reference date)"))
+    out_dir = Path(cfg.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "plan.html").write_text(render.render_html(plan),
+                                       encoding="utf-8")
+    print(render.render_text(plan), end="")
+    return 0
+
+
+# -------------------------------------------------------------- online ----
+
+
+def _readings_online(cfg: Config, notes: list[str]):
+    """Real sensor adapter at real now; failure -> no readings, noted."""
+    kind = cfg.sensor.kind
+    try:
+        readings = make_adapter(cfg.sensor).read_recent(6)
+        notes.append(f"sensor: {kind} adapter (live read)")
+        return readings
+    except Exception as e:  # noqa: BLE001 - degraded source, keep planning
+        notes.append(f"sensor: {kind} adapter failed ({type(e).__name__}); "
+                     "no ground truth")
+        return []
+
+
+def _run_plan_online(cfg: Config, args: argparse.Namespace) -> int:
+    """T16 online path: live sources, cache-through, per-source fallbacks.
+
+    Exit 0 even with degraded sources (each falls back per its module chain
+    and is named in the footer); non-zero only on total failure.
+    """
+    n = args.nights if args.nights is not None else cfg.nights
+    tz = ZoneInfo(cfg.site.tz_name)
+    today = fixtures.resolve_today(offline=False, tz=tz)
+    cache = Cache(cfg.cache_dir)
+    notes: list[str] = [f"reference date {today.isoformat()} (site tz)"]
+    showers = load_showers()
+
+    # Sky: live ephemeris, else committed fixture sky.json.
+    bsp = cache.path(BSP_NAME)
+    eph_ok = bsp.is_file()
+    try:
+        eph = load_ephemeris(cache, offline=False)
+    except Exception as e:  # noqa: BLE001 - download failed -> fixture sky
+        eph = None
+        notes.append("ephemeris: unavailable ("
+                     f"{type(e).__name__}); fixture sky.json")
+    else:
+        notes.append("ephemeris: de421.bsp ("
+                     + ("cache" if eph_ok else "downloaded") + ")")
+
+    def slice_forecast(window: DarkWindow):
+        key = cache_key(cfg.site, window.start_utc)
+        fresh_before = cache.fresh(key, 3600)
+        hours = int((window.end_utc - window.start_utc).total_seconds()
+                    // 3600) + 1
+        weather = fetch_hourly(cfg.site, window.start_utc, hours, cache,
+                               offline=False)
+        if cache.get(key, None) is not None:
+            notes.append("forecast: "
+                         + ("cache" if fresh_before else "network")
+                         + " (Open-Meteo, cache max-age 1 h)")
+        else:
+            notes.append("forecast: network unavailable; committed "
+                         "fixture fallback (dates may not overlap)")
+        if not weather:
+            notes.append("forecast: no hours overlap the dark window")
+        return weather
+
+    windows: list[DarkWindow]
+    if eph is not None:
+        windows = dark_windows(cfg.site, today, n, eph)
+    else:
+        windows = []
+        notes.append("sky: live dark windows unavailable; fixture windows")
+    notes.append(f"dark windows: {len(windows)} of {n} nights with "
+                 "astronomical darkness")
+
+    # ISS: fresh TLE within 24 h, else stale cache / fixture (flagged).
+    try:
+        tle = load_tle(cache, offline=False)
+    except Exception as e:  # noqa: BLE001
+        tle = None
+        notes.append(f"TLE: load failed ({type(e).__name__}); no passes")
+    else:
+        if tle.source != "cache":
+            notes.append(f"TLE: {tle.source} (passes may be off)")
+        else:
+            notes.append(f"TLE: CelesTrak via cache (max-age "
+                         f"{TLE_MAX_AGE_S // 3600} h)")
+    try:
+        passes_all = (visible_passes(cfg.site, windows, tle.groups)
+                      if tle is not None and windows else [])
+    except Exception as e:  # noqa: BLE001 - bsp/sat computation failure
+        passes_all = []
+        notes.append(f"ISS: pass computation failed ({type(e).__name__})")
+
+    readings = _readings_online(cfg, notes)
+
+    nights: list[Night] = []
+    if eph is not None:
+        night_sources = ((win.start_utc.astimezone(tz).date(), win)
+                         for win in windows)
+    else:
+        sky_doc = _load_sky_doc()
+        radiant: dict[str, dict[str, float]] = sky_doc.get("radiant_up", {})
+        moon_by_date = {
+            rec["date_local"]: rec["moon"] for rec in sky_doc["nights"]
+        }
+        ra_to_name = {
+            (round(s.radiant_ra_deg, 3), round(s.radiant_dec_deg, 3)): s.name
+            for s in showers
+        }
+        night_sources = [
+            (dt.date.fromisoformat(rec["date_local"]),
+             DarkWindow(dt.datetime.fromisoformat(rec["dark_start_utc"]),
+                        dt.datetime.fromisoformat(rec["dark_end_utc"])))
+            for rec in sky_doc["nights"][:n]
+        ]
+    for date, window in night_sources:
+        weather = slice_forecast(window)
+        conditions = assess(readings, weather)
+
+        if eph is not None:
+            moon = moon_info(cfg.site, window, eph)
+
+            def radiant_up_fn(ra_deg: float, dec_deg: float,
+                              _win: DarkWindow = window) -> float:
+                return radiant_up_hours(cfg.site, _win, ra_deg, dec_deg, eph)
+        else:
+            m = moon_by_date[date.isoformat()]
+            moon = MoonInfo(
+                phase_name=m["phase_name"],
+                illumination_frac=m["illumination_frac"],
+                rise_utc=(dt.datetime.fromisoformat(m["rise_utc"])
+                          if m.get("rise_utc") else None),
+                set_utc=(dt.datetime.fromisoformat(m["set_utc"])
+                         if m.get("set_utc") else None),
+                up_fraction=m["up_fraction"],
+                max_alt_deg=m["max_alt_deg"],
+            )
+
+            def radiant_up_fn(ra_deg: float, dec_deg: float,
+                              _date: dt.date = date) -> float:
+                name = ra_to_name[(round(ra_deg, 3), round(dec_deg, 3))]
+                return float(radiant.get(_date.isoformat(), {}).get(name, 0.0))
+
+        night_showers = events_for_night(showers, date,
+                                         radiant_up_hours_fn=radiant_up_fn)
+        passes = [p for p in passes_all
+                  if window.start_utc <= p.start_utc <= window.end_utc]
+        score = score_night(window, moon, weather, conditions.dew_spread_c,
+                            night_showers, passes)
+        nights.append(Night(date, window, moon, weather, conditions,
+                            night_showers, passes, score))
+
+    ranked = rank(nights)
+    plan = Plan(site=cfg.site, mode="ONLINE live",
+                reference_label=today.isoformat(), ranked=ranked,
+                notes=tuple(notes))
     out_dir = Path(cfg.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "plan.html").write_text(render.render_html(plan),

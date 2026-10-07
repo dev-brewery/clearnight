@@ -425,3 +425,13 @@ the transparency feature), T15 wraps it across lines.
 
 **Next:** T15 HTML render (red-on-black). After T15: orchestrator starts the post
 draft per timeline (Wed: draft started).
+
+---
+
+## 2026-10-08 (early hours) — Builder T15 executed & accepted (commit `b2fb089`) — WED MILESTONE
+
+render.py: one-page self-contained red-on-black HTML (inline CSS, print rules,
+phone-first sizing, escaping) + 80-col text with the wrapped A7 label. 176 tests.
+Orchestrator verified live: 6.1 KB html, no external requests, all nights/verdicts,
+0 text lines > 80. A1 now complete WITH the polish. CRITICAL PATH: T16 online path
+must land before Thu dusk (Michael's real plan). Post draft starts now (orchestrator).

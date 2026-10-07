@@ -40,10 +40,13 @@ class TestCLI(unittest.TestCase):
         self.assertIn("3 nights, ranked", r.stdout)
 
     def test_plan_explicit_config(self) -> None:
-        r = run_cli("plan", "--config", str(self.tmp / "config.example.toml"),
-                    cwd=self.tmp)
+        # T16: the online placeholder is gone; explicit-config wiring is
+        # covered offline (--online network behavior lives in
+        # test_online_wiring with mocked urlopen).
+        r = run_cli("plan", "--offline", "--config",
+                    str(self.tmp / "config.example.toml"), cwd=self.tmp)
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertIn("online mode wiring lands in T16", r.stdout)
+        self.assertIn("OFFLINE fixture epoch", r.stdout)
 
     def test_log_stub_exits_0(self) -> None:
         r = run_cli("log", "--date", "2026-10-10", "--went-out",

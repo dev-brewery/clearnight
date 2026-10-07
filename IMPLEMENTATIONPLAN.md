@@ -24,9 +24,8 @@ tracker → next brief). Only the builder commits.
 | T12 | Conditions (dew risk, pressure trend, forecast-vs-actual) | ✅ accepted — 138 tests; live assess check | `2102d3b` |
 | T13 | Pure scoring (ratified D5 v2) + verdict bands — **A5 gate** | ✅ accepted — 157 tests; live week preview: 96 PRIME → 15 STAY IN BED | `ba20985` |
 | T14 | Assemble nights + offline plan — **A1 gate** | ✅ accepted — 165 tests; live plan verified (Oct 8: 100 PRIME) | `58da4a1` |
-| T15 | HTML render (red-on-black) + text summary polish | 🔵 in flight | — |
-| T16 | Online path (live fetch/sensor/TLE through cache) | ⚪ queued | — |
-| T17 | Field log (`log` command + plan integration) | ⚪ queued | — |
+| T15 | HTML render (red-on-black) + text summary polish | ✅ accepted — 176 tests; self-contained page verified | `b2fb089` |
+| T16 | Online path (live fetch/sensor/TLE through cache) — **A2 core** | 🔵 in flight | — |
 
 **Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky core):
 ✅ T07 accepted. Phase 3 (events): ✅ COMPLETE (T08–T09). Phase 4 (weather/sensor)

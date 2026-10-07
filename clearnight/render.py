@@ -39,9 +39,10 @@ class Plan:
     """Render input: what the T14 pipeline hands to the renderers."""
 
     site: Site
-    mode: str            # e.g. "OFFLINE fixture epoch"
+    mode: str            # e.g. "OFFLINE fixture epoch" / "ONLINE live"
     reference_label: str  # e.g. "2026-10-07"
     ranked: list[Night]
+    notes: tuple[str, ...] = ()  # provenance/staleness footer lines
 
 
 def _to_local(when: dt.datetime | None, tz: ZoneInfo) -> dt.datetime | None:
@@ -192,6 +193,8 @@ def render_text(plan: Plan) -> str:
         f"generated for reference date {plan.reference_label} ({plan.mode})"
     ):
         lines.append(row)
+    for note in plan.notes:
+        lines.extend(_wrap78("- " + note))
     return "\n".join(lines) + "\n"
 
 
@@ -283,6 +286,8 @@ def render_html(plan: Plan) -> str:
     for line in _template_brief(plan.ranked, tz)[2:]:
         parts.append(f"<li>{esc(line)}</li>")
     parts.append("</ul>")
+    if plan.notes:
+        parts.append("<p>" + "<br>".join(esc(n) for n in plan.notes) + "</p>")
     parts.append(
         "<footer>Data provenance: committed demo fixtures (Open-Meteo "
         "forecast, CelesTrak TLE, NASA JPL de421.bsp). Generated for pinned "
