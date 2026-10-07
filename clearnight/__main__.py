@@ -32,8 +32,9 @@ from clearnight.iss import TLE_MAX_AGE_S, load_tle, visible_passes
 from clearnight.meteors import events_for_night, load_showers
 from clearnight.models import DarkWindow, FieldLogEntry, MoonInfo, Night
 from clearnight.models import ISSPass as ISSPassModel
-from clearnight.render import TEMPLATE_BRIEF_LABEL
+from clearnight.render import TEMPLATE_BRIEF_LABEL, _wrap78
 from clearnight.sensor import make_adapter
+from clearnight.verify import extract_claims, verified_brief
 from clearnight.score import rank, score_night
 from clearnight.sky import (
     BSP_NAME,
@@ -169,9 +170,12 @@ def run_plan(argv: list[str]) -> int:
                             night_showers, passes, score))
 
     ranked = rank(nights)
+    notes_off = ["sources: committed fixtures (Open-Meteo, CelesTrak, "
+                 "NASA JPL de421.bsp; pinned reference date)"]
+    brief_lines, brief_note = _brief_section(cfg, ranked, tz, True, notes_off)
     plan = _make_plan(cfg, ranked, "OFFLINE fixture epoch", today.isoformat(),
-                      ("sources: committed fixtures (Open-Meteo, CelesTrak, "
-                       "NASA JPL de421.bsp; pinned reference date)",))
+                      notes_off, brief_lines=brief_lines,
+                      brief_note=brief_note)
     out_dir = Path(cfg.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "plan.html").write_text(render.render_html(plan),
@@ -181,8 +185,10 @@ def run_plan(argv: list[str]) -> int:
 
 
 def _make_plan(cfg: Config, ranked: list, mode: str, ref: str,
-               notes) -> render.Plan:
-    """Build the render Plan with field-log entries matched to nights (T17)."""
+               notes, brief_lines: tuple[str, ...] = (),
+               brief_note: str = "") -> render.Plan:
+    """Build the render Plan with field-log entries matched to nights (T17)
+    and the verified brief section (T20)."""
     entries = fieldlog.read_entries(cfg.out_dir)
     log_by_date = {
         night.date_local: entry
@@ -191,7 +197,46 @@ def _make_plan(cfg: Config, ranked: list, mode: str, ref: str,
     }
     return render.Plan(site=cfg.site, mode=mode, reference_label=ref,
                        ranked=ranked, notes=tuple(notes),
-                       field_log=log_by_date)
+                       field_log=log_by_date, brief_lines=brief_lines,
+                       brief_note=brief_note)
+
+
+def _brief_section(cfg: Config, ranked: list, tz: ZoneInfo, offline: bool,
+                   notes: list[str]) -> tuple[tuple[str, ...], str]:
+    """T20: run the verified brief stage and build the render section.
+
+    Returns (brief_lines, brief_note). The provenance footer always gains
+    the brief source: llm-verified, or template + the reason (offline,
+    no dark nights, LLM unreachable, verification failed).
+    """
+    result = verified_brief(ranked, cfg.site.name, cfg.llm, tz=tz,
+                            offline=offline, max_retries=2)
+    if result.source == "llm" and result.text.strip():
+        claims = extract_claims(result.text)
+        n_claims = (len(claims.times) + len(claims.numbers) + len(claims.names)
+                    + len(claims.directions) + len(claims.day_words))
+        lines: list[str] = []
+        for para in result.text.splitlines():
+            if para.strip():
+                lines.extend(_wrap78(para))
+        note = f"brief: local model, verified - {n_claims} claims checked"
+        notes.append(f"brief: llm-verified ({result.attempts} LLM call(s), "
+                     f"{n_claims} claims checked)")
+        return tuple(lines), note
+    # Template: result.text already starts with the exact A7 label lines.
+    if offline:
+        reason = "offline; LLM not attempted"
+    elif result.attempts == 0:
+        reason = "no nights with astronomical darkness"
+    elif result.source == "llm":
+        reason = "LLM returned an empty reply"
+    elif result.violations:
+        reason = (f"verification failed: {len(result.violations)} violation(s) "
+                  f"in {result.attempts} attempt(s)")
+    else:
+        reason = f"LLM unreachable after {result.attempts} attempt(s)"
+    notes.append(f"brief: template ({reason})")
+    return tuple(result.text.splitlines()), ""
 
 
 # -------------------------------------------------------------- online ----
@@ -342,7 +387,9 @@ def _run_plan_online(cfg: Config, args: argparse.Namespace) -> int:
                             night_showers, passes, score))
 
     ranked = rank(nights)
-    plan = _make_plan(cfg, ranked, "ONLINE live", today.isoformat(), notes)
+    brief_lines, brief_note = _brief_section(cfg, ranked, tz, False, notes)
+    plan = _make_plan(cfg, ranked, "ONLINE live", today.isoformat(), notes,
+                      brief_lines=brief_lines, brief_note=brief_note)
     out_dir = Path(cfg.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "plan.html").write_text(render.render_html(plan),

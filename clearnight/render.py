@@ -44,6 +44,10 @@ class Plan:
     ranked: list[Night]
     notes: tuple[str, ...] = ()  # provenance/staleness footer lines
     field_log: dict = field(default_factory=dict)  # date_local -> FieldLogEntry
+    # T20: the verified brief stage fills these; empty -> template fallback.
+    brief_lines: tuple[str, ...] = ()  # pre-wrapped brief body (label first
+    # when template); LLM text, or the labeled template lines
+    brief_note: str = ""  # provenance line, e.g. "brief: local model, ..."
 
 
 def _to_local(when: dt.datetime | None, tz: ZoneInfo) -> dt.datetime | None:
@@ -154,6 +158,14 @@ def _wrapped_label() -> list[str]:
     return _wrap78(TEMPLATE_BRIEF_LABEL)
 
 
+def _plan_brief_lines(plan: Plan) -> list[str]:
+    """The TONIGHT'S BRIEF body: the verified brief stage's lines, or the
+    template fallback for plans built before T20."""
+    if plan.brief_lines:
+        return list(plan.brief_lines)
+    return _template_brief(plan.ranked, ZoneInfo(plan.site.tz_name))
+
+
 def _template_brief(ranked: list[Night], tz: ZoneInfo) -> list[str]:
     """Template brief from computed data only (LLM lands T18/T20)."""
     lines = _wrapped_label()
@@ -203,7 +215,10 @@ def render_text(plan: Plan) -> str:
             lines.append("  FIELD LOG:")
             lines.extend("    " + l for l in _fieldlog_lines(entry))
         lines.append("")
-    lines.extend(_template_brief(plan.ranked, tz))
+    lines.append("TONIGHT'S BRIEF")
+    lines.extend(_plan_brief_lines(plan))
+    if plan.brief_note:
+        lines.append(plan.brief_note)
     lines.append("")
     for row in _wrap78(
         "data: committed fixtures (Open-Meteo, CelesTrak, NASA JPL de421); "
@@ -305,18 +320,33 @@ def render_html(plan: Plan) -> str:
                 parts.append(f"<li>{esc(line)}</li>")
             parts.append("</ul>")
         parts.append("</section>")
-    parts.append(f"<h2>Brief</h2><p>{esc(_wrapped_label()[0])} "
-                 f"{esc(_wrapped_label()[1].strip())}</p><ul>")
-    for line in _template_brief(plan.ranked, tz)[2:]:
+    parts.append("<h2>TONIGHT'S BRIEF</h2>")
+    brief = _plan_brief_lines(plan)
+    # Template source: render the exact A7 label as one contiguous paragraph,
+    # the bullet lines as the list. LLM source: the whole text as the list.
+    body = brief
+    if brief and brief[0].startswith("Template brief ("):
+        acc, k = "", 0
+        while acc != TEMPLATE_BRIEF_LABEL and k < len(brief):
+            acc = (acc + " " + brief[k].strip()).strip()
+            k += 1
+        if acc == TEMPLATE_BRIEF_LABEL:
+            parts.append(f"<p>{esc(acc)}</p>")
+            body = brief[k:]
+    parts.append("<ul>")
+    for line in body:
         parts.append(f"<li>{esc(line)}</li>")
     parts.append("</ul>")
-    if plan.notes:
-        parts.append("<p>" + "<br>".join(esc(n) for n in plan.notes) + "</p>")
+    if plan.brief_note:
+        parts.append(f"<p>{esc(plan.brief_note)}</p>")
     parts.append(
         "<footer>Data provenance: committed demo fixtures (Open-Meteo "
         "forecast, CelesTrak TLE, NASA JPL de421.bsp). Generated for pinned "
         f"reference date {esc(plan.reference_label)}. Mode: "
         f"{esc(plan.mode)}.</footer>"
     )
+    if plan.notes:
+        parts.append("<footer>" + "<br>".join(esc(n) for n in plan.notes)
+                     + "</footer>")
     parts.append("</body></html>")
     return "\n".join(parts) + "\n"

@@ -24,6 +24,7 @@ REPO = Path(__file__).resolve().parent.parent
 BSP = REPO / "cache" / "de421.bsp"
 FORECAST_HOST = "api.open-meteo.com"
 TLE_HOST = "celestrak.org"
+LLM_HOST = "llmbox.internal"  # example config's llama.cpp endpoint
 
 
 class _Resp:
@@ -42,7 +43,10 @@ class _Resp:
 
 def _fake_urlopen(calls: list[str], forecast_payload: bytes, tle_payload: bytes):
     def urlopen(url, timeout=None):
-        calls.append(str(getattr(url, "full_url", url)))
+        u = str(getattr(url, "full_url", url))
+        if LLM_HOST in u:  # not counted: LLM attempts are not data sources
+            raise OSError("llm endpoint unreachable (mock)")
+        calls.append(u)
         if FORECAST_HOST in calls[-1]:
             return _Resp(forecast_payload)
         if TLE_HOST in calls[-1]:
