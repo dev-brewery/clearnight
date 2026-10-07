@@ -206,6 +206,7 @@ def generate_brief(
     llm: "LLMCfg",
     offline: bool = False,
     tz: ZoneInfo | None = None,
+    messages: list[dict] | None = None,
 ) -> BriefResult:
     """Offline: labeled template immediately (no LLM call, attempts 0).
 
@@ -216,7 +217,9 @@ def generate_brief(
     if offline or not plan_nights:
         return _template_result(plan_nights, attempts=0)
 
-    messages = build_prompt(plan_nights, site_name, tz)
+    # T19 verifier passes pre-built messages (original prompt + follow-up
+    # user message with violations + allowed values); default builds fresh.
+    messages = messages or build_prompt(plan_nights, site_name, tz)
     body = json.dumps({
         "model": llm.model,
         "messages": messages,

@@ -30,8 +30,8 @@ tracker → next brief). Only the builder commits.
 | — | **Post draft started** (POST_DRAFT.md — sections 1, 4, 5 drafted from real build facts) | ✅ Wed milestone | rides next commit |
 | T11b | http_json auth headers + HA-format regression tests | ✅ accepted — 194 tests; header + `_dewy` chain verified in-process | `4ad848f` |
 | — | `out/verify_sensor_endpoint.py` local tool (token via env) | ✅ live: degrade path exit 1 vs real endpoint | local (gitignored) |
-| T18 | Brief generation (prompt build + LLM call) | 🔵 in flight | — |
-| T19 | Verifier + retry/fallback — **A6/A7** | ⚪ queued | — |
+| T18 | Brief generation (prompt build + LLM call) | ✅ accepted — 204 tests (`691883b`); empty-nights guard T18a (`7893a9a`) | `691883b` |
+| T19 | Verifier + retry/fallback — **A6/A7 gate** | 🔵 in flight | — |
 | T20 | Brief wired into online plan | ⚪ queued | — |
 | T21 | README + screenshots | ⚪ queued | — |
 | T22 | QA sweep: accuracy check (A4), audits (A11/A12), fresh-clone A1 | ⚪ queued | — |
