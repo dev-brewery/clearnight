@@ -1,0 +1,170 @@
+"""Tests for clearnight.config (T03). Runs offline; never touches a real
+config.local.toml in the repo — all temp configs live in TemporaryDirectory."""
+
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+from clearnight.config import Config, ConfigError, load_config
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+EXAMPLE = REPO_ROOT / "config.example.toml"
+
+
+def write_and_load(toml_text: str) -> Config:
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "config.toml"
+        p.write_text(toml_text, encoding="utf-8")
+        return load_config(str(p))
+
+
+class TestExampleConfig(unittest.TestCase):
+    def test_example_loads_and_validates(self):
+        import os
+        cwd = os.getcwd()
+        os.chdir(REPO_ROOT)
+        try:
+            cfg = load_config()
+        finally:
+            os.chdir(cwd)
+        self.assertEqual(cfg.site.name, "Black Mesa State Park (demo)")
+        self.assertAlmostEqual(cfg.site.lat, 36.85)
+        self.assertAlmostEqual(cfg.site.lon, -102.88)
+        self.assertEqual(cfg.nights, 7)
+        self.assertEqual(cfg.sensor.kind, "csv")
+        self.assertEqual(cfg.sensor.path, "clearnight/fixtures/sensor.csv")
+        self.assertIsNone(cfg.llm.api_key)
+        self.assertEqual(cfg.llm.timeout_s, 30)
+
+    def test_explicit_example_path(self):
+        cfg = load_config(str(EXAMPLE))
+        self.assertEqual(cfg.llm.model, "qwen3.8-27b")
+        self.assertEqual(cfg.cache_dir, Path("cache"))
+
+    def test_missing_both_files_names_searched(self):
+        with tempfile.TemporaryDirectory() as d:
+            import os
+            cwd = os.getcwd()
+            os.chdir(d)
+            try:
+                with self.assertRaises(ConfigError) as cm:
+                    load_config()
+            finally:
+                os.chdir(cwd)
+            msg = str(cm.exception)
+            self.assertIn("config.example.toml", msg)
+            self.assertIn("config.local.toml", msg)
+
+    def test_missing_explicit_path(self):
+        with self.assertRaises(ConfigError):
+            load_config("no/such/file.toml")
+
+
+class TestMerge(unittest.TestCase):
+    def test_local_overrides_site_lat_and_name(self):
+        base = EXAMPLE.read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "config.example.toml").write_text(base, encoding="utf-8")
+            (Path(d) / "config.local.toml").write_text(
+                '[site]\nname = "My Backyard"\nlat = 40.5\n', encoding="utf-8")
+            import os
+            cwd = os.getcwd()
+            os.chdir(d)
+            try:
+                cfg = load_config()
+            finally:
+                os.chdir(cwd)
+        self.assertEqual(cfg.site.name, "My Backyard")
+        self.assertAlmostEqual(cfg.site.lat, 40.5)
+        self.assertAlmostEqual(cfg.site.lon, -102.88)  # untouched
+        self.assertEqual(cfg.llm.model, "qwen3.8-27b")  # llm section intact
+
+
+class TestValidation(unittest.TestCase):
+    BASE = """\
+[site]
+name = "T"
+lat = 0.0
+lon = 0.0
+elevation_m = 0.0
+tz = "UTC"
+
+[sensor]
+kind = "csv"
+path = "x.csv"
+
+[llm]
+base_url = "http://localhost:8080/v1"
+model = "m"
+"""
+
+    def load(self, extra: str) -> Config:
+        # extra holds top-level keys; TOML requires them before any [table] header
+        return write_and_load(self.BASE.replace("[site]", extra + "\n\n[site]"))
+
+    def test_valid_local_overrides(self):
+        cfg = self.load('nights = 3\nllm_api_key_override = "ignored"\n')
+        self.assertEqual(cfg.nights, 3)
+        self.assertIsNone(cfg.llm.api_key)
+
+    def test_invalid_lat(self):
+        with self.assertRaises(ConfigError) as cm:
+            write_and_load(self.BASE.replace("lat = 0.0", "lat = 91.0"))
+        self.assertIn("site.lat", str(cm.exception))
+
+    def test_invalid_tz(self):
+        with self.assertRaises(ConfigError) as cm:
+            write_and_load(self.BASE.replace('tz = "UTC"', 'tz = "Mars/Olympus"'))
+        self.assertIn("site.tz", str(cm.exception))
+
+    def test_bad_sensor_kind(self):
+        with self.assertRaises(ConfigError) as cm:
+            write_and_load(self.BASE.replace('kind = "csv"', 'kind = "serial"'))
+        self.assertIn("sensor.kind", str(cm.exception))
+
+    def test_csv_missing_path(self):
+        with self.assertRaises(ConfigError) as cm:
+            write_and_load(self.BASE.replace('path = "x.csv"\n', ""))
+        self.assertIn("sensor.path", str(cm.exception))
+
+    def test_http_json_missing_url(self):
+        toml = self.BASE.replace('kind = "csv"\npath = "x.csv"\n',
+                                 'kind = "http_json"\n')
+        with self.assertRaises(ConfigError) as cm:
+            write_and_load(toml)
+        self.assertIn("sensor.url", str(cm.exception))
+
+    def test_bad_base_url(self):
+        with self.assertRaises(ConfigError) as cm:
+            write_and_load(self.BASE.replace("http://localhost", "ftp://localhost"))
+        self.assertIn("llm.base_url", str(cm.exception))
+
+    def test_nights_out_of_range(self):
+        for bad in ("0", "15"):
+            with self.assertRaises(ConfigError) as cm:
+                self.load(f"nights = {bad}\n")
+            self.assertIn("nights", str(cm.exception))
+
+    def test_elevation_below_dead_sea(self):
+        with self.assertRaises(ConfigError) as cm:
+            write_and_load(self.BASE.replace("elevation_m = 0.0", "elevation_m = -500"))
+        self.assertIn("site.elevation_m", str(cm.exception))
+
+    def test_api_key_optional(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "config.toml"
+            p.write_text(self.BASE.replace(
+                '[llm]\n', '[llm]\napi_key = "sk-local-only"\n'), encoding="utf-8")
+            self.assertEqual(load_config(str(p)).llm.api_key, "sk-local-only")
+
+    def test_timeout_must_be_positive_int(self):
+        toml = self.BASE.replace("[llm]", "timeout_s = -1\n\n[llm]")
+        with self.assertRaises(ConfigError) as cm:
+            write_and_load(toml)
+        self.assertIn("sensor.timeout_s", str(cm.exception))
+
+
+if __name__ == "__main__":
+    unittest.main()

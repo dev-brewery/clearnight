@@ -194,3 +194,33 @@ recomputed all four examples (100 PRIME / 83 / 81 WORTH IT / 8 STAY IN BED) and 
 cap-binding pair (86%→15, 84%→66) — verified against the ratified spec.
 
 **Next:** builder T01 brief (delegated, pattern above).
+
+---
+
+## 2026-10-07 — Builder T01 executed & accepted (first commit `0a3f9d8`)
+
+Session `builder-T01` (zai/glm-5.3-flash:low). Scaffold committed: pyproject
+(skyfield==1.49.0 pinned, entry point, >=3.12), .gitignore (config.local.toml,
+cache/, out/, *.bsp — all four verified by orchestrator via check-ignore -v), MIT
+LICENSE, package/tests skeleton, stub README. All 16 repo files in the initial
+commit; working tree clean; author + sign-off per A12. Orchestrator independently
+verified commit, ignores, pip install, clean status.
+
+**Orchestrator ruling (exit-5 deviation):** Python 3.12 `unittest discover` exits 5
+when zero tests exist — real behavior, honestly flagged by the builder. Ruling:
+acceptance means 'suite runs green'; from T02 onward real tests exist and exit 0 is
+required. No placeholder test; T01 stands as-is.
+
+**Next:** T02 (models.py dataclasses + tests).
+
+---
+
+## 2026-10-07 — Builder T02 executed & accepted (commit `658a84e`)
+
+All 11 frozen dataclasses per ARCHITECTURE §4 incl. NightScore.verdict; 23 tests
+(frozen/type/naive-UTC/optional-None) — orchestrator re-ran suite (OK, exit 0) and
+spot-checked NightScore immutability + verdict field live. Builder correctly excluded
+orchestrator's uncommitted JOURNAL.md edits. Convention from T03: builder commits
+include JOURNAL.md so the repo carries the log.
+
+**Next:** T03 (config loading), then T04 (cache), T05 (CLI skeleton).
