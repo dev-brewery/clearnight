@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from clearnight.models import Night
-from clearnight.render import _template_brief
+from clearnight.render import _template_brief, _wrapped_label
 
 if TYPE_CHECKING:
     from clearnight.config import LLMCfg
@@ -186,6 +186,14 @@ def build_prompt(
 def _template_result(plan_nights: list[Night], attempts: int) -> BriefResult:
     """Labeled template brief from computed data only (reuses the T14
     template builder; identical field discipline)."""
+    if not plan_nights:
+        # Empty plan (e.g. high-latitude summer, no astronomical darkness
+        # in the window): render an honest one-liner under the SAME labeled
+        # header. No tz-dependent lines — there is nothing to localize.
+        lines = [*_wrapped_label(),
+                 "No nights with astronomical darkness in the plan window."]
+        return BriefResult(text="\n".join(lines), source="template",
+                           attempts=attempts, violations=[])
     tz = _infer_tz(plan_nights[0])
     text = "\n".join(_template_brief(plan_nights, tz))
     return BriefResult(text=text, source="template", attempts=attempts,

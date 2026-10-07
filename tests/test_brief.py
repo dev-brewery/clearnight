@@ -233,6 +233,36 @@ class RetryAndFallback(unittest.TestCase):
         self.assertIn("2026-10-06", result.text)
         self.assertIn("Draconids", result.text)
 
+    def test_empty_nights_offline_template(self):
+        """Zero dark nights (e.g. high-latitude summer): no crash, honest
+        template line, same labeled header, no tz-dependent lines."""
+        result = generate_brief([], "Black Mesa State Park", CFG_NOKEY,
+                                offline=True)
+        self.assertIsInstance(result, BriefResult)
+        self.assertEqual(result.source, "template")
+        self.assertEqual(result.attempts, 0)
+        self.assertIn("Template brief (LLM output unavailable",
+                      result.text)
+        self.assertIn(
+            "No nights with astronomical darkness in the plan window.",
+            result.text)
+        self.assertNotIn("2026-", result.text)  # no date/zone lines
+        self.assertNotIn("am", result.text.split(chr(10))[-1])
+
+    def test_empty_nights_online_never_calls_urlopen(self):
+        """A brief for zero nights is pointless: template immediately,
+        no LLM round-trip, attempts 0 even on the online path."""
+        def urlopen(*a, **k):
+            raise AssertionError("empty input must not call urlopen")
+
+        with mock.patch("urllib.request.urlopen", urlopen):
+            result = generate_brief([], "Black Mesa State Park", CFG_KEY)
+        self.assertEqual(result.source, "template")
+        self.assertEqual(result.attempts, 0)
+        self.assertIn(
+            "No nights with astronomical darkness in the plan window.",
+            result.text)
+
     def test_success_result_is_briefresult(self):
         with mock.patch("urllib.request.urlopen",
                         lambda req, timeout=None: _llm_reply("go at 8:14 pm")):
