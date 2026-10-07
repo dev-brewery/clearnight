@@ -1,0 +1,102 @@
+{
+  "site": {
+    "name": "Black Mesa State Park (demo)",
+    "lat": 36.85,
+    "lon": -102.88,
+    "tz": "America/Chicago"
+  },
+  "reference_date": "2026-10-07",
+  "nights": [
+    {
+      "date_local": "2026-10-07",
+      "dark_start_utc": "2026-10-08T01:55:00+00:00",
+      "dark_end_utc": "2026-10-08T11:25:00+00:00",
+      "moon": {
+        "illumination_frac": 0.0642,
+        "phase_name": "Waning Crescent",
+        "rise_utc": "2026-10-08T10:52:09.199219+00:00",
+        "set_utc": null,
+        "up_fraction": 0.0609,
+        "max_alt_deg": 6.29
+      }
+    },
+    {
+      "date_local": "2026-10-08",
+      "dark_start_utc": "2026-10-09T01:55:00+00:00",
+      "dark_end_utc": "2026-10-09T11:25:00+00:00",
+      "moon": {
+        "illumination_frac": 0.022,
+        "phase_name": "New Moon",
+        "rise_utc": null,
+        "set_utc": null,
+        "up_fraction": 0.0,
+        "max_alt_deg": -6.16
+      }
+    },
+    {
+      "date_local": "2026-10-09",
+      "dark_start_utc": "2026-10-10T01:50:00+00:00",
+      "dark_end_utc": "2026-10-10T11:25:00+00:00",
+      "moon": {
+        "illumination_frac": 0.0026,
+        "phase_name": "New Moon",
+        "rise_utc": null,
+        "set_utc": null,
+        "up_fraction": 0.0,
+        "max_alt_deg": -18.33
+      }
+    },
+    {
+      "date_local": "2026-10-10",
+      "dark_start_utc": "2026-10-11T01:50:00+00:00",
+      "dark_end_utc": "2026-10-11T11:25:00+00:00",
+      "moon": {
+        "illumination_frac": 0.0055,
+        "phase_name": "New Moon",
+        "rise_utc": null,
+        "set_utc": null,
+        "up_fraction": 0.0,
+        "max_alt_deg": -20.23
+      }
+    },
+    {
+      "date_local": "2026-10-11",
+      "dark_start_utc": "2026-10-12T01:50:00+00:00",
+      "dark_end_utc": "2026-10-12T11:30:00+00:00",
+      "moon": {
+        "illumination_frac": 0.0294,
+        "phase_name": "New Moon",
+        "rise_utc": null,
+        "set_utc": null,
+        "up_fraction": 0.0,
+        "max_alt_deg": -14.31
+      }
+    },
+    {
+      "date_local": "2026-10-12",
+      "dark_start_utc": "2026-10-13T01:45:00+00:00",
+      "dark_end_utc": "2026-10-13T11:30:00+00:00",
+      "moon": {
+        "illumination_frac": 0.0718,
+        "phase_name": "Waxing Crescent",
+        "rise_utc": null,
+        "set_utc": null,
+        "up_fraction": 0.0,
+        "max_alt_deg": -7.1
+      }
+    },
+    {
+      "date_local": "2026-10-13",
+      "dark_start_utc": "2026-10-14T01:45:00+00:00",
+      "dark_end_utc": "2026-10-14T11:30:00+00:00",
+      "moon": {
+        "illumination_frac": 0.13,
+        "phase_name": "Waxing Crescent",
+        "rise_utc": null,
+        "set_utc": null,
+        "up_fraction": 0.0,
+        "max_alt_deg": -0.65
+      }
+    }
+  ]
+}

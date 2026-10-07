@@ -7,7 +7,7 @@
     "tz": "America/Chicago"
   },
   "generated_utc": "2026-10-07T18:18:39Z",
-  "sky_json": "recorded in T07",
+  "sky_json": "recorded",
   "provenance": {
     "forecast": "Open-Meteo forecast API (keyless)",
     "tle": "CelesTrak GP NORAD 25544",

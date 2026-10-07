@@ -299,3 +299,15 @@ fragility (one transient exit-127 on an inline brief triggered this).
 
 **Next:** T06 with orchestrator corrections (reference_date 2026-10-07; sky.json
 deferred to T07; live recording run included).
+
+---
+
+## 2026-10-07 — Builder T06 executed & accepted (commit `6ee7e5a`) — PHASE 1 GATE COMPLETE
+
+Fixtures committed: manifest (ref 2026-10-07, sky_json deferred), forecast.json
+(11 hourly vars, Oct 6–14, equal lengths), tle.txt (ISS ZARYA 3-liner), sensor.csv
+(43 rows, exact header). fetch --record-fixtures live-ran exit 0. resolve_today
+offline pinning verified live by orchestrator. 60 tests green. Deviation (self-caught,
+accepted): first test draft used bare functions; rewritten to unittest.TestCase.
+
+**Next:** T07 sky engine + sky.json recording. Phase 2 begins.
