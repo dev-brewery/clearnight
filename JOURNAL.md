@@ -286,3 +286,16 @@ Manifest reference_date := 2026-10-07. sky.json recording deferred to T07 (needs
 sky.py); T06 records manifest/forecast/TLE/sensor + epoch pinning.
 
 **Next:** T04a (de-flake), then T06.
+
+---
+
+## 2026-10-07 — Builder T04a executed & accepted (commit `9dd449d`)
+
+Cache timing tests rewritten deterministically (pinned mtimes via os.utime, no
+wall-clock races); full suite 5× consecutive green, identical counts. Orchestrator
+re-ran twice to confirm. Convention added: long delegation briefs are written to
+`out/brief-<task>.md` (gitignored) and passed as @file — avoids shell quoting
+fragility (one transient exit-127 on an inline brief triggered this).
+
+**Next:** T06 with orchestrator corrections (reference_date 2026-10-07; sky.json
+deferred to T07; live recording run included).

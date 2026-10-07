@@ -1,0 +1,16 @@
+{
+  "reference_date": "2026-10-07",
+  "site": {
+    "name": "Black Mesa State Park (demo)",
+    "lat": 36.85,
+    "lon": -102.88,
+    "tz": "America/Chicago"
+  },
+  "generated_utc": "2026-10-07T18:18:39Z",
+  "sky_json": "recorded in T07",
+  "provenance": {
+    "forecast": "Open-Meteo forecast API (keyless)",
+    "tle": "CelesTrak GP NORAD 25544",
+    "sensor": "Open-Meteo past-day analysis hours for the demo site"
+  }
+}

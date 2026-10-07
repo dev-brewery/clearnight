@@ -14,12 +14,12 @@ tracker → next brief). Only the builder commits.
 | T03 | `config.py` + example TOML (D4 api_key pattern) | ✅ accepted — 39 tests total | `e0182b9` |
 | T04 | `cache.py` + tzdata Windows marker | ✅ accepted — 47 tests total | `3d5e362` |
 | T05 | CLI skeleton (`plan`/`log`/`fetch`, `--offline`) | ✅ accepted — 54 tests, exit codes verified live | `94c6191` |
-| T04a | De-flake cache timing tests (flake caught post-accept) | 🔵 immediate | — |
-| T06 | Demo fixtures + epoch pinning (ref date corrected → 2026-10-07) | ⚪ queued | — |
+| T04a | De-flake cache timing tests (flake caught post-accept) | ✅ accepted — 5× green runs | `9dd449d` |
+| T06 | Demo fixtures + epoch pinning (ref date corrected → 2026-10-07) | 🔵 in flight | — |
 
-**Phase 1 gate (skeleton, Wed AM):** T04a + T06 remain. **Flags:** tzdata exception
-pending owner ratification (JOURNAL, T03 entry); T04 timing-test flake found at
-18:15 UTC post-accept, fix in flight (T04a). **Owner-required, non-delegable:**
+**Phase 1 gate (skeleton, Wed AM):** T06 in flight — last Phase-1 item. **Flags:**
+tzdata exception pending owner ratification (JOURNAL, T03 entry). Delegation briefs
+live in `out/brief-*.md` (gitignored, ephemeral). **Owner-required, non-delegable:**
 Thu Oct 9 field test (D3); Sat Oct 11 publish click (D1).
 
 ---
