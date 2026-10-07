@@ -56,7 +56,7 @@ class TestPlanOffline(unittest.TestCase):
             self.assertIn(date, html)
         # A3 field labels present.
         for label in (
-            "dark window (local)", "moon:", "clouds:", "dew risk:",
+            "dark window (local)", "moon", "clouds", "dew risk",
             "shower:", "iss:", "PEAK",
         ):
             self.assertIn(label, html)
@@ -77,7 +77,13 @@ class TestPlanOffline(unittest.TestCase):
         self.assertIn("overcast", last_block)
 
     def test_template_brief_label_exactly_once(self) -> None:
-        self.assertEqual(self.stdout.count(TEMPLATE_BRIEF_LABEL), 1)
+        # T15: the 103-char label is wrapped across two <=80-col lines in the
+        # text summary (exact wording wins, wrapping allowed, never truncated).
+        lines = self.stdout.splitlines()
+        i = next(n for n, ln in enumerate(lines)
+                 if ln.startswith("Template brief ("))
+        wrapped = [lines[i].strip(), lines[i + 1].strip()]
+        self.assertEqual(" ".join(wrapped), TEMPLATE_BRIEF_LABEL)
         html = (self.tmp / "out" / "plan.html").read_text(encoding="utf-8")
         self.assertIn(TEMPLATE_BRIEF_LABEL, html)
 

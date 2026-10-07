@@ -23,12 +23,19 @@ tracker → next brief). Only the builder commits.
 | T11 | Sensor adapters (csv + http_json) + factory | ✅ accepted — 124 tests; A8 config-switch asserted | `0d79e87` |
 | T12 | Conditions (dew risk, pressure trend, forecast-vs-actual) | ✅ accepted — 138 tests; live assess check | `2102d3b` |
 | T13 | Pure scoring (ratified D5 v2) + verdict bands — **A5 gate** | ✅ accepted — 157 tests; live week preview: 96 PRIME → 15 STAY IN BED | `ba20985` |
-| T14 | Assemble nights + offline plan — **A1 gate** | 🔵 in flight | — |
-| T15 | HTML render (red-on-black) + text summary | ⚪ queued | — |
+| T14 | Assemble nights + offline plan — **A1 gate** | ✅ accepted — 165 tests; live plan verified (Oct 8: 100 PRIME) | `58da4a1` |
+| T15 | HTML render (red-on-black) + text summary polish | 🔵 in flight | — |
+| T16 | Online path (live fetch/sensor/TLE through cache) | ⚪ queued | — |
+| T17 | Field log (`log` command + plan integration) | ⚪ queued | — |
 
 **Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky core):
 ✅ T07 accepted. Phase 3 (events): ✅ COMPLETE (T08–T09). Phase 4 (weather/sensor)
-in flight: T10–T12. ✅ COMPLETE. Phase 5 (scoring) in flight: T13. ✅ COMPLETE (A5). Phase 6 milestone: T14 in flight — the A1 gate. **Flags:** tzdata exception pending
+in flight: T10–T12. ✅ COMPLETE. Phase 5 (scoring) in flight: T13. ✅ COMPLETE (A5). Phase 6 milestone: T14 ✅ COMPLETE — **A1 PASSED**
+(`py -m clearnight plan --offline` runs end-to-end from committed fixtures; Oct 8
+ranks 100 PRIME, Oct 9 85 PRIME with Draconids PEAK at 0% cloud; overcast cap
+fired on the weekend). Radiant-up hours recorded into sky.json. Template brief
+labeled per A7. Ruling: 103-char label line exceeds 80 cols - wording wins,
+wrap to two lines in T15. Next: T15 render. **Flags:** tzdata exception pending
 owner ratification (JOURNAL, T03 entry). Delegation briefs live in `out/brief-*.md` **Owner-required, non-delegable:**
 Thu Oct 9 field test (D3); Sat Oct 11 publish click (D1).
 

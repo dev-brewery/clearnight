@@ -408,3 +408,20 @@ weekend). The engine discriminates on real data. Builder self-caught a test bug
 against §5 arithmetic (cap variant uses Example A's moon).
 
 **Next:** T14 - assemble the offline plan. THE A1 GATE.
+
+---
+
+## 2026-10-08 (early hours) — Builder T14 executed & accepted (commit `58da4a1`) — A1 GATE PASSED
+
+Offline plan end-to-end: config -> fixture nights (epoch-pinned) -> forecast slice
+-> sensor readings -> conditions -> showers (recorded radiant-up, Draconids PEAK
+marked) -> recorded ISS passes -> score/rank -> plan.html + 80-col text summary +
+labeled template brief. 165 tests; in-process socket-blocked run proves no network.
+Orchestrator ran it live: Oct 8 = 100 PRIME (base 98.5 + Draconids 6), Oct 9 =
+85 PRIME (0% cloud, New Moon 0%, radiant up 9.6h), Oct 12/13 = 15 STAY IN BED
+(overcast, cap reason shown). ORCHESTRATOR RULING (not owner-level): the A7 label
+wording is 103 chars, exceeding the 80-col text rule - label wording wins (it is
+the transparency feature), T15 wraps it across lines.
+
+**Next:** T15 HTML render (red-on-black). After T15: orchestrator starts the post
+draft per timeline (Wed: draft started).

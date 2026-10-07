@@ -3,8 +3,9 @@
 T06: `fetch --record-fixtures` records the demo fixture set from the live APIs
 (one-time run, network available); bare `fetch` prints fixture status offline.
 T14: `plan --offline` assembles the full night plan from committed fixtures
-(no network, no LLM; template brief). Online wiring lands in T16;
-`log` lands in T17.
+(no network, no LLM; template brief). T15: rendering moved to clearnight.render
+(red-on-black HTML + <=80-col text); this module builds the Plan structure and
+delegates. Online wiring lands in T16; `log` lands in T17.
 """
 
 from __future__ import annotations
@@ -12,22 +13,21 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
-import html
 import json
 import sys
-import textwrap
 import urllib.request
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from clearnight import fixtures
+from clearnight import fixtures, render
 from clearnight.cache import Cache
 from clearnight.config import Config, ConfigError, load_config
 from clearnight.conditions import assess
 from clearnight.forecast import fetch_hourly, slice_to_window
 from clearnight.meteors import events_for_night, load_showers
-from clearnight.models import DarkWindow, HourWeather, MoonInfo, Night, NightScore
+from clearnight.models import DarkWindow, MoonInfo, Night
 from clearnight.models import ISSPass as ISSPassModel
+from clearnight.render import TEMPLATE_BRIEF_LABEL, Plan
 from clearnight.sensor import make_adapter
 from clearnight.score import rank, score_night
 
@@ -36,10 +36,6 @@ FETCH_MSG = "fetch: not implemented until T06"
 ONLINE_MSG = (
     "plan: online mode wiring lands in T16 "
     "(offline mode against fixtures is implemented)"
-)
-TEMPLATE_BRIEF_LABEL = (
-    "Template brief (LLM output unavailable or failed verification; "
-    "all values are computed, not generated)."
 )
 FIXTURES_SKY = Path(__file__).parent / "fixtures" / "sky.json"
 
@@ -76,175 +72,6 @@ def _build_parser() -> argparse.ArgumentParser:
 def _load_sky_doc() -> dict:
     return json.loads(FIXTURES_SKY.read_text(encoding="utf-8"))
 
-
-def _fmt_hms(when: dt.datetime) -> str:
-    return when.strftime("%H:%M")
-
-
-def _to_local(when: dt.datetime | None, tz: ZoneInfo) -> dt.datetime | None:
-    if when is None:
-        return None
-    return when.astimezone(tz)
-
-
-def _cloud_mean(weather: list[HourWeather]) -> float | None:
-    vals = [w.cloud_total_pct for w in weather if w.cloud_total_pct is not None]
-    return round(sum(vals) / len(vals), 1) if vals else None
-
-
-def _breakdown_lines(score: NightScore) -> list[str]:
-    return [
-        f"total {score.total} {score.verdict} | base {score.base:.1f}",
-        f"cloud {score.cloud_term:.2f} moon {score.moon_term:.2f} "
-        f"trans {score.transparency_term:.2f} dew {score.dew_term:.2f} "
-        f"wind {score.wind_term:.2f}",
-        f"meteor_bonus {score.meteor_bonus} iss_bonus {score.iss_bonus}",
-    ]
-
-
-def _shower_lines(night: Night, tz: ZoneInfo) -> list[str]:
-    if not night.showers:
-        return ["showers: none active"]
-    lines = []
-    for s in night.showers:
-        mark = " PEAK" if s.is_peak_night else ""
-        lines.append(
-            f"shower: {s.name} ZHR {s.zhr:g} radiant up {s.radiant_up_hours:.1f}h{mark}"
-        )
-    return lines
-
-
-def _iss_lines(night: Night, tz: ZoneInfo) -> list[str]:
-    if not night.iss_passes:
-        return ["iss: no visible passes"]
-    lines = []
-    for p in night.iss_passes:
-        s = _to_local(p.start_utc, tz)
-        m = _to_local(p.max_utc, tz)
-        e = _to_local(p.end_utc, tz)
-        lines.append(
-            f"iss: {_fmt_hms(s)}-{_fmt_hms(e)} max {_fmt_hms(m)} "
-            f"{p.max_alt_deg:.0f}deg {p.start_dir}>{p.max_dir}>{p.end_dir}"
-        )
-    return lines
-
-
-def _moon_line(night: Night, tz: ZoneInfo) -> str:
-    moon = night.moon
-    rise = _to_local(moon.rise_utc, tz)
-    set_ = _to_local(moon.set_utc, tz)
-    rs = (
-        f"rise {_fmt_hms(rise) if rise else '-'} "
-        f"set {_fmt_hms(set_) if set_ else '-'}"
-    )
-    return (
-        f"moon: {moon.phase_name} illum {moon.illumination_frac * 100:.0f}% {rs}"
-    )
-
-
-def _night_block(night: Night, tz: ZoneInfo) -> list[str]:
-    ws = _to_local(night.dark.start_utc, tz)
-    we = _to_local(night.dark.end_utc, tz)
-    cloud = _cloud_mean(night.weather)
-    lines = [
-        f"night {night.date_local.isoformat()}",
-    ]
-    lines.extend("  " + l for l in _breakdown_lines(night.score))
-    lines.extend([
-        f"  dark window (local): {_fmt_hms(ws)}-{_fmt_hms(we)}",
-        "  " + _moon_line(night, tz),
-        f"  clouds: mean {cloud if cloud is not None else 'n/a'}%"
-        f" | dew risk: {night.conditions.dew_risk}"
-        f" (spread {night.conditions.dew_spread_c:.1f}C)",
-    ])
-    if night.score.reasons:
-        lines.append("  notes: " + ", ".join(night.score.reasons))
-    lines.extend("  " + l for l in _shower_lines(night, tz))
-    lines.extend("  " + l for l in _iss_lines(night, tz))
-    return lines
-
-
-def _wrap78(text: str) -> list[str]:
-    return textwrap.wrap(text, width=78, subsequent_indent="  ",
-                         break_long_words=False, break_on_hyphens=False)
-
-
-def _template_brief(ranked: list[Night], tz: ZoneInfo) -> list[str]:
-    """Template brief from computed data only (LLM lands T18/T20)."""
-    lines = [TEMPLATE_BRIEF_LABEL]
-    for night in ranked[:3]:
-        ws = _to_local(night.dark.start_utc, tz)
-        we = _to_local(night.dark.end_utc, tz)
-        when = f"go {_fmt_hms(ws)}-{_fmt_hms(we)} local"
-        peaks = [s.name for s in night.showers if s.is_peak_night]
-        active = [s.name for s in night.showers if not s.is_peak_night]
-        look: list[str] = []
-        if peaks:
-            look.append(f"{', '.join(peaks)} PEAK")
-        if active:
-            look.append(f"{', '.join(active)} active")
-        if night.iss_passes:
-            look.append(f"{len(night.iss_passes)} ISS pass(es)")
-        if night.moon.illumination_frac * night.moon.up_fraction < 0.1:
-            look.append("dark moon")
-        line = (
-            f"- {night.date_local.isoformat()} (score {night.score.total} "
-            f"{night.score.verdict}): {when}; look for "
-            + ("; ".join(look) if look else "deep-sky under dark skies")
-            + "."
-        )
-        lines.extend(_wrap78(line))
-    return lines
-
-
-def _text_summary(ranked: list[Night], cfg: Config) -> str:
-    tz = ZoneInfo(cfg.site.tz_name)
-    lines: list[str] = []
-    lines.append(f"stargazing plan - {cfg.site.name} (OFFLINE fixture epoch)")
-    lines.append(
-        f"site {cfg.site.lat:.2f}, {cfg.site.lon:.2f} | "
-        f"{len(ranked)} nights, ranked"
-    )
-    lines.append("")
-    for night in ranked:
-        lines.extend(_night_block(night, tz))
-        lines.append("")
-    lines.extend(_template_brief(ranked, tz))
-    lines.append("")
-    for row in _wrap78(
-        "data: committed fixtures (Open-Meteo, CelesTrak, NASA JPL de421); "
-        "generated for reference date 2026-10-07 (OFFLINE)"
-    ):
-        lines.append(row)
-    return "\n".join(lines) + "\n"
-
-
-def _html_plan(ranked: list[Night], cfg: Config) -> str:
-    tz = ZoneInfo(cfg.site.tz_name)
-    esc = html.escape
-    parts = [
-        "<!DOCTYPE html>",
-        '<html lang="en"><head><meta charset="utf-8">',
-        "<title>clearnight plan (offline)</title></head><body>",
-        f"<h1>Stargazing plan - {esc(cfg.site.name)} (OFFLINE fixture epoch)</h1>",
-    ]
-    for night in ranked:
-        parts.append(f"<h2>Night {esc(night.date_local.isoformat())}</h2>")
-        parts.append("<ul>")
-        for line in _night_block(night, tz):
-            parts.append(f"<li>{esc(line.strip())}</li>")
-        parts.append("</ul>")
-    parts.append("<h2>Brief</h2><ul>")
-    for line in _template_brief(ranked, tz):
-        parts.append(f"<li>{esc(line)}</li>")
-    parts.append("</ul>")
-    parts.append(
-        "<footer>Fixture provenance: committed demo fixtures (Open-Meteo "
-        "forecast, CelesTrak TLE, NASA JPL de421.bsp). Generated for pinned "
-        "reference date 2026-10-07. Mode: OFFLINE.</footer>"
-    )
-    parts.append("</body></html>")
-    return "\n".join(parts) + "\n"
 
 
 def run_plan(argv: list[str]) -> int:
@@ -333,11 +160,13 @@ def run_plan(argv: list[str]) -> int:
                             night_showers, passes, score))
 
     ranked = rank(nights)
-    text = _text_summary(ranked, cfg)
+    plan = Plan(site=cfg.site, mode="OFFLINE fixture epoch",
+                reference_label=today.isoformat(), ranked=ranked)
     out_dir = Path(cfg.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "plan.html").write_text(_html_plan(ranked, cfg), encoding="utf-8")
-    print(text, end="")
+    (out_dir / "plan.html").write_text(render.render_html(plan),
+                                       encoding="utf-8")
+    print(render.render_text(plan), end="")
     return 0
 
 
