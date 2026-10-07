@@ -344,3 +344,16 @@ covered synthetically. Convention confirmed: orchestrator artifacts ride the NEX
 task commit (one-commit lag by design).
 
 **Next:** T09 ISS passes.
+
+---
+
+## 2026-10-07 (late) — Builder T09 executed & accepted (commit `d3ff041`) — Phase 3 complete
+
+iss.py: TLE 24 h cache with fresh→stale→fixture fallback chain (provenance carried);
+30 s sampling; cylindrical shadow test cross-checked against skyfield is_sunlit;
+8-point directions; window clamp + dedup. Demo-week recording: exactly ONE visible
+pass (Oct 13, 11:21–11:25 UTC dawn, 19.7°, S→SE→E) — sparse but real; builder
+cross-checked no samples were over-filtered. Online plans use fresh TLE (T16), so
+Thursday's real plan may differ. 98 tests green. Phase 3 (events) COMPLETE.
+
+**Next:** Phase 4 — T10 forecast, T11 sensors, T12 conditions; then T13 scoring.
