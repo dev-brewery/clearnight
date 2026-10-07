@@ -112,7 +112,8 @@ class PromptSnapshot(unittest.TestCase):
                       sys_text)
 
     def test_user_payload_exact_values(self):
-        data = json.loads(self.msgs[1]["content"])
+        lines = self.msgs[1]["content"].splitlines()
+        data = json.loads(lines[0])
         self.assertEqual(set(data), {"site", "nights"})
         self.assertEqual(data["site"], "Black Mesa State Park")
         self.assertEqual(len(data["nights"]), 3)
@@ -140,7 +141,8 @@ class PromptSnapshot(unittest.TestCase):
         self.assertEqual(n0["iss_passes"][0]["directions"], "NW>N>NE")
 
     def test_dates_are_local_and_distinct(self):
-        data = json.loads(self.msgs[1]["content"])
+        lines = self.msgs[1]["content"].splitlines()
+        data = json.loads(lines[0])
         self.assertEqual([n["date"] for n in data["nights"]],
                          ["2026-10-06", "2026-10-07", "2026-10-08"])
         self.assertEqual([n["weekday"] for n in data["nights"]],
@@ -148,6 +150,23 @@ class PromptSnapshot(unittest.TestCase):
 
     def test_system_prompt_constant_shared(self):
         self.assertEqual(self.msgs[0]["content"], SYSTEM_PROMPT)
+
+    def test_system_message_verbatim_times_rule(self):
+        # T20c: live loop showed the model rewriting window times; the
+        # system prompt must demand verbatim echo.
+        sys_text = self.msgs[0]["content"]
+        self.assertIn(
+            "State times exactly as given in the data - same clock format, "
+            "no reformatting, no recomputation, no conversion", sys_text)
+
+    def test_allowed_times_lines_per_night(self):
+        # T20c: compact ALLOWED TIMES whitelist appended after the JSON.
+        allowed = self.msgs[1]["content"].splitlines()[1:]
+        self.assertEqual(allowed, [
+            "2026-10-06 allowed times: 8:14 PM, 6:02 AM",
+            "2026-10-07 allowed times: 8:14 PM, 6:02 AM",
+            "2026-10-08 allowed times: 8:14 PM, 6:02 AM",
+        ])
 
 
 class RequestShape(unittest.TestCase):

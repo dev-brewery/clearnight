@@ -203,10 +203,20 @@ class TestVerifiedBrief(unittest.TestCase):
         self.assertIn("not in the data", calls[1][-1]["content"])
         self.assertIn("20:14", calls[1][-1]["content"])  # exact allowed values
 
-    def test_three_failures_fall_back_to_template(self):
+    def test_success_on_fifth_call_within_default_budget(self):
+        # T20c: default budget is now 4 retries (5 calls); a reasoning
+        # model converging on the 5th call still lands an LLM brief.
+        result, calls = self._run([BAD_BRIEF] * 4 + [GOOD_BRIEF])
+        self.assertEqual((result.source, result.attempts, result.violations),
+                         ("llm", 5, []))
+        self.assertEqual(len(calls), 5)
+
+    def test_four_failures_fall_back_to_template(self):
+        # T20c: default budget exhausted after 5 calls (4 retries).
         result, calls = self._run([BAD_BRIEF])
         self.assertEqual(result.source, "template")
-        self.assertEqual(result.attempts, 3)
+        self.assertEqual(result.attempts, 5)
+        self.assertEqual(len(calls), 5)
         self.assertTrue(result.violations)
         self.assertIn("Template brief", result.text)
 

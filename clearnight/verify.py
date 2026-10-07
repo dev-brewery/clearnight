@@ -332,7 +332,10 @@ def verified_brief(
     llm,
     tz: dt.tzinfo | None = None,
     offline: bool = False,
-    max_retries: int = 2,
+    # Live-measured convergence (T20c): a real reasoning model went 4 -> 2
+    # violations across 3 attempts without converging; the larger budget
+    # gives reasoning models room to land on the exact allowed values.
+    max_retries: int = 4,
 ):
     """Generate, verify, re-prompt with violations + exact allowed values,
     and fall back to the labeled template brief (A6/A7).

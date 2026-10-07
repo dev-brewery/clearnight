@@ -46,6 +46,8 @@ SYSTEM_PROMPT = (
     "You write short stargazing briefs. Use ONLY facts present in the "
     "provided data. Every time, number, direction, and event name must come "
     "from the data, pre-rounded as given. Never invent or estimate. "
+    "State times exactly as given in the data - same clock format, no "
+    "reformatting, no recomputation, no conversion. "
     "120 words or fewer. Structure: when to go out, which way to face, "
     "what to look for."
 )
@@ -173,13 +175,26 @@ def build_prompt(
 ) -> list[dict]:
     """[system, user] messages per ARCHITECTURE §6 for the top 3 nights."""
     tz = tz or _infer_tz(plan_nights[0])
+    nights = plan_nights[:3]
     user = {
         "site": site_name,
-        "nights": [_night_payload(n, tz) for n in plan_nights[:3]],
+        "nights": [_night_payload(n, tz) for n in nights],
     }
+    # Compact unambiguous per-night time whitelist (T20c): the live loop
+    # showed the model reformatting window times; echo the exact permitted
+    # strings so verification can pass verbatim.
+    def _ampm(when: dt.datetime) -> str:
+        h12 = when.hour % 12 or 12
+        return f"{h12}:{when.minute:02d} {when.strftime('%p')}"
+    allowed = "\n".join(
+        f"{n.date_local.isoformat()} allowed times: "
+        f"{_ampm(n.dark.start_utc.astimezone(tz))}, "
+        f"{_ampm(n.dark.end_utc.astimezone(tz))}"
+        for n in nights)
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": json.dumps(user, separators=(",", ":"))},
+        {"role": "user", "content":
+            json.dumps(user, separators=(",", ":")) + "\n" + allowed},
     ]
 
 
