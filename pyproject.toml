@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clearnight"
+version = "0.1.0"
+description = "Stargazing planner: dark windows, Moon, ISS, meteors, weather, field log"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "dev-brewery contributors" }]
+dependencies = [
+    "skyfield==1.49.0",
+]
+
+[project.scripts]
+clearnight = "clearnight.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["clearnight*"]

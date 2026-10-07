@@ -1,0 +1,23 @@
+# clearnight local config & artifacts (never commit)
+config.local.toml
+cache/
+out/
+*.bsp
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+*.egg
+.venv/
+venv/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
