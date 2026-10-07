@@ -19,6 +19,8 @@ class TestCache(unittest.TestCase):
 
     def test_fresh_within_age(self):
         self.cache.put("k", b"x")
+        recent = time.time() - 5
+        os.utime(self.cache.path("k"), (recent, recent))
         self.assertTrue(self.cache.fresh("k", 60))
         self.assertFalse(self.cache.fresh("k", 0))
 
@@ -42,9 +44,11 @@ class TestCache(unittest.TestCase):
     def test_age(self):
         self.assertIsNone(self.cache.age("nope"))
         self.cache.put("k", b"x")
+        past = time.time() - 120
+        os.utime(self.cache.path("k"), (past, past))
         a = self.cache.age("k")
         self.assertIsNotNone(a)
-        self.assertLess(a, 60)
+        self.assertGreaterEqual(a, 120)
 
     def test_traversal_rejected(self):
         for bad in ("../evil", "a/b", "", "..", "a\\b"):

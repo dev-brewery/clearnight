@@ -264,3 +264,25 @@ Orchestrator verified live (guard '../evil','a/b',''; roundtrip). Builder self-c
 a test expectation against spec (good charter behavior).
 
 **Next:** T05 (CLI skeleton), then T06 (fixtures). Phase 1 gate: T05–T06.
+
+---
+
+## 2026-10-07 — Builder T05 executed & accepted (commit `94c6191`); T04 flake found
+
+CLI skeleton: plan (offline/config/nights, placeholder output), log/fetch stubs,
+main()->int. 54 tests. Orchestrator verified live (plan --offline exit 0 + output,
+log stub, --nights 99 exit 2 — orchestrator's first recheck piped through tail and
+misread exit 0; recheck without pipe confirmed 2). Tracker/journal/AGENTS rode the
+commit as designed.
+
+**Flake caught at 18:15 UTC:** `test_cache.test_fresh_within_age` failed post-accept
+(passed at commit) — wall-clock race in the test, not a code defect. Micro-brief T04a
+issued: deterministic mtimes via os.utime, suite run ×5. Standing lesson recorded:
+timing tests must pin mtimes, never race the clock.
+
+**T06 correction (orchestrator):** TASKS.md fixture reference_date 2026-10-06 is one
+day off — today is Tue 2026-10-07, so demo week = Oct 7–13 (covers Draconids Oct 9).
+Manifest reference_date := 2026-10-07. sky.json recording deferred to T07 (needs
+sky.py); T06 records manifest/forecast/TLE/sensor + epoch pinning.
+
+**Next:** T04a (de-flake), then T06.
