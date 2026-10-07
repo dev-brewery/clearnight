@@ -20,14 +20,14 @@ tracker → next brief). Only the builder commits.
 | T08 | Meteor showers + `data/meteor_showers_2026.json` | ✅ accepted — 84 tests; Draconids boundary verified live | `4fe5d43` |
 | T09 | ISS TLE cache + visible-pass prediction + fixture recording | ✅ accepted — 98 tests; 1 real pass (Oct 13, dawn, 19.7°) | `d3ff041` |
 | T10 | Open-Meteo forecast client + window slicing | ✅ accepted — 112 tests; live slice check (Oct 9 window: 0% cloud) | `c3701b6` |
-| T11 | Sensor adapters (csv + http_json) + factory | 🔵 in flight | — |
-| T12 | Conditions (dew risk, pressure trend, forecast-vs-actual) | ⚪ queued | — |
-| T13 | Pure scoring (ratified D5 v2) + verdict bands | ⚪ queued | — |
+| T11 | Sensor adapters (csv + http_json) + factory | ✅ accepted — 124 tests; A8 config-switch asserted | `0d79e87` |
+| T12 | Conditions (dew risk, pressure trend, forecast-vs-actual) | ✅ accepted — 138 tests; live assess check | `2102d3b` |
+| T13 | Pure scoring (ratified D5 v2) + verdict bands — **A5 gate** | 🔵 in flight | — |
 | T14 | Assemble nights + offline plan — **A1 gate** | ⚪ queued | — |
 
 **Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky core):
 ✅ T07 accepted. Phase 3 (events): ✅ COMPLETE (T08–T09). Phase 4 (weather/sensor)
-in flight: T10–T12. **Flags:** tzdata exception pending
+in flight: T10–T12. ✅ COMPLETE. Phase 5 (scoring) in flight: T13. **Flags:** tzdata exception pending
 owner ratification (JOURNAL, T03 entry). Delegation briefs live in `out/brief-*.md` **Owner-required, non-delegable:**
 Thu Oct 9 field test (D3); Sat Oct 11 publish click (D1).
 

@@ -369,3 +369,28 @@ fresh→stale→fixture chain with range clipping. 112 tests. Orchestrator live 
 note: fixture is demo-site data only.
 
 **Next:** T11 sensor adapters, T12 conditions.
+
+---
+
+## 2026-10-07 (late) — Builder T11 executed & accepted (commit `0d79e87`)
+
+Sensor package per ARCHITECTURE §4: protocol with pinned now_utc for determinism,
+factory, CSV adapter (fixture format, malformed-row warnings, missing file -> []),
+http_json (dotted-path field_map, never raises, class-name-only warnings to avoid
+leaking private URLs). 124 tests. Live check: fixture tail ends 18:00Z Oct 7 -
+read_recent(6)@23:00Z returns exactly the 18:00Z reading. NOTE for T14: offline
+demo carries 1 recent reading -> pressure trend will honestly read 'unknown'.
+
+**Next:** T12 conditions, then T13 scoring (D5 v2).
+
+---
+
+## 2026-10-07 (late) — Builder T12 executed & accepted (commit `2102d3b`) — Phase 4 complete
+
+conditions.py pure assess(): sensor-projected dew spread wins, forecast fallback,
+0.0-'high'-when-unknowable rule documented; pressure trend ±1 hPa/3h thresholds;
+forecast-vs-actual string. 138 tests. Live check on fixture: 43 readings, spread
+24.5C 'low', trend flat +0.3. NOTE: T12's commit skipped the journal/tracker files
+(one-off; T13 brief restates the convention - lag absorbed).
+
+**Next:** T13 scoring - the D5 v2 formula, A5 gate.
