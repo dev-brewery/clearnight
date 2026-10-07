@@ -19,8 +19,8 @@ tracker → next brief). Only the builder commits.
 | T07 | Sky engine (skyfield: dark windows, Moon, radiants) + sky.json | ✅ accepted — 72 tests; Oct 9 illum 0.26%, 9.58 h dark | `8d2be02` |
 | T08 | Meteor showers + `data/meteor_showers_2026.json` | ✅ accepted — 84 tests; Draconids boundary verified live | `4fe5d43` |
 | T09 | ISS TLE cache + visible-pass prediction + fixture recording | ✅ accepted — 98 tests; 1 real pass (Oct 13, dawn, 19.7°) | `d3ff041` |
-| T10 | Open-Meteo forecast client + window slicing | 🔵 in flight | — |
-| T11 | Sensor adapters (csv + http_json) + factory | ⚪ queued | — |
+| T10 | Open-Meteo forecast client + window slicing | ✅ accepted — 112 tests; live slice check (Oct 9 window: 0% cloud) | `c3701b6` |
+| T11 | Sensor adapters (csv + http_json) + factory | 🔵 in flight | — |
 | T12 | Conditions (dew risk, pressure trend, forecast-vs-actual) | ⚪ queued | — |
 | T13 | Pure scoring (ratified D5 v2) + verdict bands | ⚪ queued | — |
 | T14 | Assemble nights + offline plan — **A1 gate** | ⚪ queued | — |

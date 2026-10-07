@@ -357,3 +357,15 @@ cross-checked no samples were over-filtered. Online plans use fresh TLE (T16), s
 Thursday's real plan may differ. 98 tests green. Phase 3 (events) COMPLETE.
 
 **Next:** Phase 4 — T10 forecast, T11 sensors, T12 conditions; then T13 scoring.
+
+---
+
+## 2026-10-07 (late) — Builder T10 executed & accepted (commit `c3701b6`)
+
+Forecast client per ARCHITECTURE §4: pinned 9-var URL, 15 s timeout, 1 h cache,
+fresh→stale→fixture chain with range clipping. 112 tests. Orchestrator live check:
+48 fixture hours fetched offline; Oct 9 dark window sliced to 10 h with MEAN CLOUD
+0.0% — the demo fixture records a perfectly clear Draconids night. A8-relevant A11
+note: fixture is demo-site data only.
+
+**Next:** T11 sensor adapters, T12 conditions.
