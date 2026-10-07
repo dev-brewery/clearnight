@@ -484,3 +484,17 @@ warning-hygiene assertions. Also planned: out/verify_sensor_endpoint.py local
 one-command tool (token via env, never through repo/orchestrator) for the owner's
 pre-Thursday check. Owner's config.local.toml still needs [site] (owner-only
 hands) and optionally [llm].
+
+**T11b executed & accepted (commit `4ad848f`).** SensorCfg.headers -> adapter
+Request; HA-format regression locked (exact live timestamp string); warning
+hygiene asserted (no token/URL in warnings). 194 tests. Orchestrator in-process
+verification: header reaches Request; canned _dewy body -> full Reading, spread
+1.2 (the HIGH case). out/verify_sensor_endpoint.py written and live-tested:
+without HA_TOKEN against the real endpoint -> clean DEGRADED message, exit 1
+(true exit confirmed un-piped); with token (owner-run) it prints the Reading +
+dew label. Owner one-liner for Thursday: set HA_TOKEN, then run the tool against
+sensor.clearnight_mock_dry, then point config.local.toml at the REAL sensor
+entity (or keep the mock for the field test - both work; mock never survives HA
+restart, refresh script exists on the VM).
+
+**Next:** T18 brief generation (POST_DRAFT.md now rides commits).

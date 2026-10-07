@@ -28,7 +28,9 @@ tracker → next brief). Only the builder commits.
 | T16 | Online path (live fetch/sensor/TLE through cache) — **A2 core** | ✅ accepted — live smoke verified; cache-through proven | `f5c4bea` |
 | T17 | Field log (`log` command + plan integration) — **A9** | ✅ accepted — 190 tests; FIELD LOG block verified end-to-end | `9c8775e` |
 | — | **Post draft started** (POST_DRAFT.md — sections 1, 4, 5 drafted from real build facts) | ✅ Wed milestone | rides next commit |
-| T18 | Brief generation (prompt build + LLM call) | 🔵 next | — |
+| T11b | http_json auth headers + HA-format regression tests | ✅ accepted — 194 tests; header + `_dewy` chain verified in-process | `4ad848f` |
+| — | `out/verify_sensor_endpoint.py` local tool (token via env) | ✅ live: degrade path exit 1 vs real endpoint | local (gitignored) |
+| T18 | Brief generation (prompt build + LLM call) | 🔵 in flight | — |
 | T19 | Verifier + retry/fallback — **A6/A7** | ⚪ queued | — |
 | T20 | Brief wired into online plan | ⚪ queued | — |
 | T21 | README + screenshots | ⚪ queued | — |
