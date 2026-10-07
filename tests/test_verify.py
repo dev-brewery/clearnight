@@ -115,6 +115,24 @@ class TestExtract(unittest.TestCase):
         with self.assertRaises(Exception):
             claims.times = ()
 
+    def test_iso_date_not_number_claims(self):
+        # T20d live regression: "2026" in a date was classified as a count.
+        claims = extract_claims("Best night: 2026-10-08, peak after midnight")
+        self.assertEqual(claims.numbers, ())
+
+    def test_bare_year_not_count_claim(self):
+        claims = extract_claims("Since 2021 the club has met; 15 meteors")
+        bare = [n for n in claims.numbers if n.unit == ""]
+        self.assertEqual([n.value for n in bare], [15.0])
+
+    def test_compass_am_pm_and_no_not_names(self):
+        # T20d live regressions: SE/PM captured as names, sentence-initial No.
+        claims = extract_claims(
+            "The shower moves SE. No visible ISS passes tonight; "
+            "best around 10:00 PM.")
+        for bad in ("SE", "No", "PM"):
+            self.assertNotIn(bad, claims.names)
+
 
 class TestCheck(unittest.TestCase):
     def check(self, text, nights=None, **kw):
@@ -171,6 +189,25 @@ class TestCheck(unittest.TestCase):
         self.assertEqual(len(v), 1)
         self.assertIn("promise", v[0])
         self.assertIn("10", v[0])  # the only citable ZHR
+
+    def test_date_in_brief_not_count_violation(self):
+        # T20d live regression: dated briefs must not trip the promise rule.
+        self.assertEqual(self.check("Plan for 2026-10-08: dark at 8:14 pm."),
+                         [])
+
+    def test_site_name_containment_matches(self):
+        # T20d live regression: model wrote "Black Mesa State Park", the
+        # allowed set has "Black Mesa State Park (demo)".
+        v = check_claims(extract_claims("Tonight at Black Mesa State Park."),
+                         _nights(), "Black Mesa State Park (demo)", TZ)
+        self.assertEqual([x for x in v if "allowed names" in x], [])
+
+    def test_overhead_strictness_preserved(self):
+        # "look overhead" with only a 20 deg pass REMAINS a violation.
+        v = check_claims(extract_claims("look overhead tonight"),
+                         _nights(max_alt=20.0), SITE, TZ)
+        self.assertEqual(len(v), 1)
+        self.assertIn("60 deg", v[0])
 
     def test_bare_number_percent_context(self):
         self.assertEqual(self.check("humidity near 42 and it holds"), [])

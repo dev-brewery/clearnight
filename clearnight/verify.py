@@ -43,10 +43,17 @@ go out near over under above below high low clear
 monday tuesday wednesday thursday friday saturday sunday
 north northeast east southeast south southwest west northwest
 straight overhead
+# Compass abbreviations, AM/PM, and sentence-initial starters that a
+# capitalized match would otherwise capture as named events (T20d,
+# live-captured false positives).
+no am pm n nne ne ene e ese sse se s ssw sw wsw w wnw nnw nw
 """.split())
 
 _TIME_RE = re.compile(
     r"\b(\d{1,2}):(\d{2})(?:\s*([ap])\.?m\.?)?", re.IGNORECASE)
+# ISO dates are stripped BEFORE number extraction so the year is never
+# mis-read as a count (T20d: "2026-10-08" tripped the meteor-promise rule).
+_ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 _NUM_RE = re.compile(
     r"\b(\d+(?:\.\d+)?)\s*(°C|celsius|km/h|kph|kmh|%|percent|degrees?|°)?",
     re.IGNORECASE)
@@ -101,10 +108,16 @@ def extract_claims(text: str) -> Claims:
                                     m.group(3)), m.group(0).strip()))
     # Strip matched times so their digits are not re-counted as numbers.
     without_times = _TIME_RE.sub(" ", text)
+    # Strip ISO dates so the year is never re-counted as a number (T20d).
+    without_times = _ISO_DATE_RE.sub(" ", without_times)
 
     numbers: list[NumberClaim] = []
     for m in _NUM_RE.finditer(without_times):
         unit = (m.group(2) or "").lower()
+        # A bare 4-digit year (1900-2100) is a date, not a count/percent.
+        if (unit == "" and m.group(1).isdigit() and len(m.group(1)) == 4
+                and 1900 <= int(m.group(1)) <= 2100):
+            continue
         if unit in ("%", "percent"):
             kind = "percent"
         elif unit in ("km/h", "kph", "kmh"):
@@ -290,8 +303,12 @@ def check_claims(claims: Claims, nights: list[Night], site_name: str,
         # Ignore common-word padding (e.g. "The Waxing Crescent" -> the
         # phase name itself) and tokens made entirely of common words.
         parts = [p for p in name.split() if p.lower() not in _COMMON_WORDS]
-        if not parts or " ".join(parts).lower() in lowered \
-                or name.lower() in lowered:
+        candidates = [name.lower()]
+        if parts:
+            candidates.append(" ".join(parts).lower())
+        # Site-name containment (T20d): "Black Mesa State Park" matches the
+        # allowed "Black Mesa State Park (demo)", either direction.
+        if any(c in a or a in c for a in lowered for c in candidates):
             continue
         out.append(f"name '{name}' is not in the allowed set; allowed names: "
                    f"{_fmt_list(sorted(allowed_names))}")
