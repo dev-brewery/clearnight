@@ -38,16 +38,12 @@ tracker → next brief). Only the builder commits.
 
 **STATE: ALL APP MUSTS PASS.** A1 ✓ fresh-clone proven · A2 ✓ live+verified brief · A3 ✓ ·
 A4 ✓ vs timeanddate (±1 min actual) · A5 ✓ · A6 ✓ · A7 ✓ live-proven · A8 ✓ · A9 ✓ ·
-A10 ✓ 249 offline · A11 ◐ tip clean, 3 historical mock-URL blobs — ruling below ·
+A10 ✓ 249 offline · A11 ✓ CLOSED by owner-ordered purge (history rewritten) ·
 A12 ✓ 29/29 sign-offs. **Remaining: D1 publish (owner, Sat 6 PM CT), D2 repo push
 (owner) + post link, D3 field test (owner, Thu night), D4 post section (drafted).**
 
-**A11 ruling (orchestrator, FLAGGED FOR OWNER):** scrub removed the HA VM LAN IP
-from the tip; 4 historical blobs retain mock-entity URLs (no token, no real sensor,
-no coordinates). Options: accept + document (chosen — preserves the auditable
-hash-referenced journal the post relies on) OR history rewrite pre-push (invalidates
-every recorded hash). Owner can order the rewrite before pushing; repo is private
-until then.
+**A11 ✓ CLOSED by owner-ordered purge:** tip + full history rewritten (.env-driven
+endpoints; zero private-address blobs remain; hashes not preserved per owner).
 
 **Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky core):
 ✅ T07 accepted. Phase 3 (events): ✅ COMPLETE (T08–T09). Phase 4 (weather/sensor)

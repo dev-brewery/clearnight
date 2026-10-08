@@ -544,3 +544,22 @@ A11 ruling flagged (above). Suite: 249 tests offline.
 
 **The build is complete pending owner actions.** Next: post finalization; Thu
 dusk online run + field test; Sat publish.
+
+---
+
+## 2026-10-08 (late) - OWNER RULING: purge hard-coded addresses; .env-driven endpoints
+
+Owner: "Purge any real addresses hard-coded. That address should be coming from a
+.env. I don't care about preserving hashes if you are writing unsafe fragile code."
+This overturns the orchestrator's earlier accept-and-document A11 ruling - safety
+over audit-trail hash preservation. Executed: T23 purged the tip and added stdlib
+.env support (CLEARNIGHT_LLM_BASE_URL/_MODEL/_API_KEY, CLEARNIGHT_SENSOR_URL override
+TOML; .env gitignored before it ever existed; .env.example committed; tripwire test
+asserts no private IPs in committed config templates). Orchestrator then rewrote all
+history: every blob's LAN addresses replaced (llm-box -> llmbox.internal, HA VM ->
+ha.internal), filter-backup refs/branches/reflogs destroyed, gc --prune=now. Proofs:
+git grep across all refs = zero hits; 30 commits, builder authorship + sign-offs
+intact; 253 tests green; fresh-clone A1 re-proven. ALL commit hashes cited in this
+journal and the tracker from before the purge are PRE-REWRITE identifiers, kept as
+historical narrative only - post-purge history begins at the rewritten chain
+(current tip: a056279). NOTE: the local out/ verification tool was scrubbed too.
