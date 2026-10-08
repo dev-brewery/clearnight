@@ -594,6 +594,31 @@ in config.local.toml.
 **Next:** owner fills coordinates; Thu dusk real run; field test; log; post
 finalization; Sat publish.
 
+---
+
+## 2026-10-08 (final entry of the night) — Site pinned; verified brief at the real site
+
+Owner: "HA has the lat long. Otherwise, pin it at [owner-authorized fallback pin -
+location redacted]." HA /api/config attempt 401'd (token still placeholder - see below);
+the fallback was geocoded via OSM/Nominatim and written to config.local.toml [site]
+(gitignored; coordinates never committed), with the template's Chicago tz default
+corrected. The plan runs LIVE at the real site:
+Oct 8 = 100 PRIME, 9.5 h dark window, 0% cloud, New Moon 2%, Draconids bonus.
+**VERIFIED BRIEF AT THE REAL SITE: llm-verified, 44 claims checked, 3 calls,
+z.ai GLM-5.3-flash, thinking=low.** (Outcome wobbles run-to-run - inherent model
+variance; both paths render honestly. Empty-content recurs occasionally despite
+thinking=low; retry budget absorbs it.)
+
+**Corrections owned by the orchestrator:** (1) earlier claim "sensor reading live
+through the token" was a misread of the footer (it names the adapter path, not
+read success) - the sensor has been 401-degrading on the placeholder all along.
+(2) T27 QUEUED (morning, before the dusk run): sensor footer must reflect actual
+read outcome (live vs degraded), so plan output never overstates.
+
+**Owner's ONE remaining edit:** the Bearer token line in config.local.toml
+[sensor.headers] (clearnight-mock token from the HA agent). Everything else is
+armed: .env (z.ai), site (real, redacted), tz corrected, fixtures, post draft.
+
 ## 2026-10-08 (late) — OWNER RULING: purge hard-coded addresses; .env-driven endpoints
 
 Owner: "Purge any real addresses hard-coded. That address should be coming from a
