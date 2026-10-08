@@ -7,6 +7,7 @@ always name the offending field.
 
 from __future__ import annotations
 
+import os
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -150,7 +151,44 @@ def _load_toml(path: Path) -> dict[str, Any]:
         return tomllib.load(f)
 
 
+_ENV_KEYS = {
+    "CLEARNIGHT_LLM_BASE_URL": ("llm", "base_url"),
+    "CLEARNIGHT_LLM_MODEL": ("llm", "model"),
+    "CLEARNIGHT_LLM_API_KEY": ("llm", "api_key"),
+    "CLEARNIGHT_SENSOR_URL": ("sensor", "url"),
+}
+
+
+def load_dotenv(path: Path | None = None) -> None:
+    """Parse a .env file (KEY=VALUE lines, # comments, optional quotes) and
+    os.environ.setdefault each key: the real environment wins over .env, .env
+    wins over nothing. Called by load_config; safe if no .env exists."""
+    p = path if path is not None else Path(".env")
+    if not p.is_file():
+        return
+    for raw in p.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        if key:
+            os.environ.setdefault(key, value)
+
+
+def _apply_env_overrides(data: dict[str, Any]) -> None:
+    """Env vars (CLEARNIGHT_*) override the corresponding TOML values when set."""
+    for key, (section, field) in _ENV_KEYS.items():
+        val = os.environ.get(key)
+        if val is not None:
+            data.setdefault(section, {})[field] = val
+
+
 def load_config(path: str | None = None) -> Config:
+    load_dotenv()
     if path is not None:
         p = Path(path)
         if not p.is_file():
@@ -167,6 +205,7 @@ def load_config(path: str | None = None) -> Config:
         data = _load_toml(example) if example.is_file() else {}
         if local.is_file():
             _deep_merge(data, _load_toml(local))
+    _apply_env_overrides(data)
     return _validate(_section(data, "site"), _section(data, "sensor"),
                      _section(data, "llm"), data.get("nights", 7),
                      data.get("cache_dir", "cache"), data.get("out_dir", "out"))

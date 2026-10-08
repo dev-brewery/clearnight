@@ -49,7 +49,7 @@ Therefore:
 
 Role wiring (Michael, Oct 7, 2026): `AGENTS.md` is the router; role charters live in `.pi/skills/{architect,builder,orchestrator}/SKILL.md`. Claude Code wrote the initial proposition only; orchestration belongs to pi, and the orchestrator owns build success or failure. All agent-role models run direct against the z.ai provider.
 
-The in-app model calls a configurable OpenAI-compatible HTTP endpoint with an **optional API key** (any key lives only in `config.local.toml`, which is gitignored). Michael's instance runs locally on llm-box (EPYC, 2x Tesla P40) through llama.cpp, default `http://llmbox.internal:8080/v1`; any hosted OpenAI-compatible endpoint works through config alone.
+The in-app model calls a configurable OpenAI-compatible HTTP endpoint with an **optional API key** (any key lives only in `config.local.toml`, which is gitignored). Michael's instance runs locally on llm-box (EPYC, 2x Tesla P40) through llama.cpp; the default endpoint URL comes from gitignored `.env` / `config.local.toml` — see `.env.example` — and is never committed. Any hosted OpenAI-compatible endpoint works through config alone.
 
 ---
 

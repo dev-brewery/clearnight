@@ -19,15 +19,20 @@ path = "clearnight/fixtures/sensor.csv"
 # HTTP sensor alternative (maps JSON response keys to Reading fields):
 # [sensor]
 # kind = "http_json"
-# url = "http://your-station/api/latest"
+# url = "http://homeassistant.local:8123/api/states/sensor.example"
 # field_map = { temperature = "temperature_c", humidity = "humidity_pct", pressure = "pressure_hpa", dew_point = "dew_point_c" }
 # timeout_s = 10
 # Auth headers if the endpoint needs them (config.local.toml ONLY, never commit):
 # [sensor.headers]
 # Authorization = "Bearer <long-lived token - config.local.toml ONLY, never commit>"
 
+# Real endpoints live in .env or config.local.toml (both gitignored) - NEVER in
+# committed files. Env vars override TOML: CLEARNIGHT_LLM_BASE_URL,
+# CLEARNIGHT_LLM_MODEL, CLEARNIGHT_LLM_API_KEY, CLEARNIGHT_SENSOR_URL.
+# See .env.example. The default below is a safe inert placeholder; the online
+# plan against it simply uses the labeled template brief (by design).
 [llm]
-base_url = "http://llmbox.internal:8080/v1"
+base_url = "http://localhost:8080/v1"
 model = "/models/Qwen3.8-27B-GGUF/Qwen3.8-27B-Q6_K.gguf"
 # local 27B reasoning models need minutes for a 2000-token budget - 30s was measured too short live (Oct 8); fast hosted endpoints can lower this
 timeout_s = 300

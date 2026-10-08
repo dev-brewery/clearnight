@@ -39,17 +39,35 @@ happened, and the next plan shows its own past predictions next to your outcomes
 
 ## 2. Demo
 
-[SCREENSHOTS — after Thursday's field test: (a) offline plan for the demo week
-with the ranked nights + verdicts; (b) the Oct 9 Draconids night detail; (c) the
-field-log block showing prediction beside outcome; (d) terminal summary.]
+[SCREENSHOTS - docs/plan-offline.png: the full offline plan, red-on-black, seven
+ranked nights with verdicts, the Draconids PEAK marking, the overcast-capped
+weekend at STAY IN BED, and the labeled template brief. docs/fieldlog-comparison.png:
+a night's prediction rendered beside its field-log entry. Both regenerate from a
+fresh clone: `py -m clearnight plan --offline`. The live verified brief from the
+local model (receipt below) goes here too.]
+
+Verifier receipt for the post: the first live attempts FAILED verification and the
+plan said so - the model corrupted the dark-window times; the retry loop fed the
+violations back; the surviving brief cites only computed values: "Go out at Black
+Mesa State Park (demo) on 2026-10-08 from 8:55 pm to 6:25 am. Face E, S, or SE.
+Look for Draconids, ZHR 10, and Orionids, ZHR 20. New Moon, 2% illumination...
+Score 100, PRIME." - footer: brief: llm-verified (2 LLM call(s), 17 claims checked).
+
+Accuracy receipt: computed dark windows match timeanddate.com for the demo site
+within 1 minute; the Oct 9 New Moon (1.0% at lunar noon, never above the horizon
+all night) confirmed against the independent reference; locked in the test suite
+(tests/test_accuracy.py).
 
 ## 3. Code
 
 Public repo: `github.com/dev-brewery/clearnight` (MIT). Python 3.12, one pinned
-runtime dependency (skyfield), stdlib for everything else — no API keys for any
-data source, no accounts, no telemetry. `python -m clearnight plan --offline`
-reproduces the demo plan from committed fixtures with zero network. [LINK AT
-PUBLISH]
+runtime dependency (skyfield) plus a Windows-only tzdata marker, stdlib for
+everything else - no API keys for any data source, no accounts, no telemetry.
+`python -m clearnight plan --offline` reproduces the demo plan from committed
+fixtures with zero network (proven from a fresh clone). 249-test offline suite.
+Every commit is authored and signed off by the builder model - the full delegation
+journal (decisions, briefs, verifications, receipts) ships in the repo as
+JOURNAL.md. [LINK AT PUBLISH]
 
 ## 4. How I built it with open-source AI
 

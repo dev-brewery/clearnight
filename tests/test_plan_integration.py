@@ -31,7 +31,7 @@ REPO = Path(__file__).resolve().parent.parent
 BSP = REPO / "cache" / "de421.bsp"
 FORECAST_HOST = "api.open-meteo.com"
 TLE_HOST = "celestrak.org"
-LLM_HOST = "llmbox.internal"
+LLM_HOST = "localhost"
 
 
 class _Resp:

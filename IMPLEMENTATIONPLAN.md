@@ -33,8 +33,21 @@ tracker → next brief). Only the builder commits.
 | T18 | Brief generation (prompt build + LLM call) | ✅ accepted — 204 tests (`691883b`); empty-nights guard T18a (`7893a9a`) | `691883b` |
 | T19 | Verifier + retry/fallback — **A6/A7 gate** | ✅ accepted — 224 tests; extractor verified live | `9cbbaf3` |
 | T20 (+a–d) | Verified brief wired into plan — **A2 complete** | ✅ accepted — 243 tests; **LIVE VERIFIED BRIEF from local Qwen** | `07a12c3`…`ca9beb2` |
-| T21 | README + screenshots | 🔵 next | — |
-| T22 | QA sweep: accuracy check (A4), audits (A11/A12), fresh-clone A1 | ⚪ queued | — |
+| T21 | README + screenshots | ✅ accepted — README + sample plan; PNGs shot by orchestrator via browser | `fd76968` + `2682e16` |
+| T22 | QA sweep: accuracy (A4), audits, fresh-clone A1 | ✅ accepted — 249 tests; determinism fixed; fresh-clone proven | `2682e16` |
+
+**STATE: ALL APP MUSTS PASS.** A1 ✓ fresh-clone proven · A2 ✓ live+verified brief · A3 ✓ ·
+A4 ✓ vs timeanddate (±1 min actual) · A5 ✓ · A6 ✓ · A7 ✓ live-proven · A8 ✓ · A9 ✓ ·
+A10 ✓ 249 offline · A11 ◐ tip clean, 3 historical mock-URL blobs — ruling below ·
+A12 ✓ 29/29 sign-offs. **Remaining: D1 publish (owner, Sat 6 PM CT), D2 repo push
+(owner) + post link, D3 field test (owner, Thu night), D4 post section (drafted).**
+
+**A11 ruling (orchestrator, FLAGGED FOR OWNER):** scrub removed the HA VM LAN IP
+from the tip; 4 historical blobs retain mock-entity URLs (no token, no real sensor,
+no coordinates). Options: accept + document (chosen — preserves the auditable
+hash-referenced journal the post relies on) OR history rewrite pre-push (invalidates
+every recorded hash). Owner can order the rewrite before pushing; repo is private
+until then.
 
 **Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky core):
 ✅ T07 accepted. Phase 3 (events): ✅ COMPLETE (T08–T09). Phase 4 (weather/sensor)
@@ -142,7 +155,7 @@ The architect model reads `PROJECTGUIDELINES.md` in full and produces:
 
 ### Phase 7 — Grounded AI Brief (Fri Oct 10, AM)
 
-- `brief.py`: prompt built strictly from computed Night data; call to the local Qwen endpoint on llm-box (`http://llmbox.internal:8080/v1`, OpenAI-compatible) with timeout.
+- `brief.py`: prompt built strictly from computed Night data; call to the local Qwen endpoint on llm-box (configured endpoint, OpenAI-compatible) with timeout.
 - `verify.py`: extract every time, number, and named event from the brief; check each against that night's computed data; retry loop with problems listed; labeled template brief as final fallback. Tests with canned replies: one passes, one fails (A6); unreachable-LLM case renders fine (A7).
 
 **Gate:** A6 and A7 tests green; a real brief from llm-box survives verification or falls back cleanly.

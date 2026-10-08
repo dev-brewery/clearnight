@@ -1,5 +1,6 @@
 # clearnight local config & artifacts (never commit)
 config.local.toml
+.env
 cache/
 out/
 *.bsp

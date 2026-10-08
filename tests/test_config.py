@@ -3,6 +3,8 @@ config.local.toml in the repo — all temp configs live in TemporaryDirectory.""
 
 from __future__ import annotations
 
+import os
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -175,6 +177,100 @@ model = "m"
             with self.assertRaises(ConfigError) as cm:
                 write_and_load(toml)
             self.assertIn("llm.max_tokens", str(cm.exception))
+
+class TestNoPrivateIPsCommitted(unittest.TestCase):
+    """T23 tripwire: no private-IP addresses in committed config files."""
+    PATTERN = re.compile(r"192\.168\.|10\.0\.|172\.(1[6-9]|2\d|3[01])\.")
+
+    def test_committed_config_files_have_no_private_ips(self):
+        for name in ("config.example.toml", ".env.example"):
+            text = (REPO_ROOT / name).read_text(encoding="utf-8")
+            hits = self.PATTERN.findall(text)
+            self.assertEqual(hits, [], f"{name} contains private IP(s): {hits}")
+
+
+class TestDotenv(unittest.TestCase):
+    """T23: .env parsing and CLEARNIGHT_* env overrides."""
+
+    def _load_in_dir(self, d: Path, toml_text: str):
+        import os
+        cwd = os.getcwd()
+        os.chdir(d)
+        try:
+            return load_config()
+        finally:
+            os.chdir(cwd)
+
+    TOML = ('[site]\nname = "X"\nlat = 1\nlon = 2\nelevation_m = 100\n'
+            'tz = "UTC"\n\n[sensor]\nkind = "csv"\npath = "s.csv"\n\n'
+            '[llm]\nbase_url = "http://toml:1/v1"\nmodel = "toml-model"\n')
+
+    def test_dotenv_parsed_and_setdefault_semantics(self):
+        keys = ["CLEARNIGHT_LLM_BASE_URL", "CLEARNIGHT_LLM_MODEL",
+                "CLEARNIGHT_SENSOR_URL", "CLEARNIGHT_LLM_API_KEY"]
+        saved = {k: os.environ.pop(k, None) for k in keys}
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                (root / "config.example.toml").write_text(self.TOML, encoding="utf-8")
+                (root / ".env").write_text(
+                    '# comment\nCLEARNIGHT_LLM_BASE_URL=http://dotenv:2/v1\n'
+                    'CLEARNIGHT_LLM_MODEL="quoted-model"\n'
+                    "CLEARNIGHT_SENSOR_URL='single-quoted'\n"
+                    'CLEARNIGHT_LLM_API_KEY=  \n', encoding="utf-8")
+                cfg = self._load_in_dir(root, self.TOML)
+            # .env wins over TOML; quoted values are unquoted
+            self.assertEqual(cfg.llm.base_url, "http://dotenv:2/v1")
+            self.assertEqual(cfg.llm.model, "quoted-model")
+            self.assertEqual(cfg.sensor.url, "single-quoted")
+            # empty .env value becomes "" - harmless (api_key optional str)
+            self.assertEqual(cfg.llm.api_key, "")
+        finally:
+            for k, v in saved.items():
+                if v is not None:
+                    os.environ[k] = v
+                else:
+                    os.environ.pop(k, None)
+
+    def test_real_environment_wins_over_dotenv(self):
+        keys = ["CLEARNIGHT_LLM_BASE_URL", "CLEARNIGHT_LLM_MODEL",
+                "CLEARNIGHT_SENSOR_URL"]
+        saved = {k: os.environ.pop(k, None) for k in keys}
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                (root / "config.example.toml").write_text(self.TOML, encoding="utf-8")
+                (root / ".env").write_text(
+                    "CLEARNIGHT_LLM_BASE_URL=http://dotenv:2/v1\n", encoding="utf-8")
+                os.environ["CLEARNIGHT_LLM_BASE_URL"] = "http://env:3/v1"
+                cfg = self._load_in_dir(root, self.TOML)
+                # real environment wins over .env
+                self.assertEqual(cfg.llm.base_url, "http://env:3/v1")
+                # unset keys leave TOML values intact
+                self.assertEqual(cfg.llm.model, "toml-model")
+        finally:
+            for k, v in saved.items():
+                if v is not None:
+                    os.environ[k] = v
+                else:
+                    os.environ.pop(k, None)
+
+    def test_env_override_applies_to_explicit_path_too(self):
+        keys = ["CLEARNIGHT_LLM_BASE_URL"]
+        saved = {k: os.environ.pop(k, None) for k in keys}
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                p = Path(d) / "c.toml"
+                p.write_text(self.TOML, encoding="utf-8")
+                os.environ["CLEARNIGHT_LLM_BASE_URL"] = "http://env:4/v1"
+                cfg = load_config(str(p))
+            self.assertEqual(cfg.llm.base_url, "http://env:4/v1")
+        finally:
+            for k, v in saved.items():
+                if v is not None:
+                    os.environ[k] = v
+                else:
+                    os.environ.pop(k, None)
 
 
 if __name__ == "__main__":

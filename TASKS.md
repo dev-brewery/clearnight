@@ -38,7 +38,7 @@ Each task advances the listed acceptance criteria (IDs in `PROJECTGUIDELINES.md`
 
 ### T03 — Config loading
 - **Goal:** TOML config load/merge/validate with example file.
-- **Files:** `clearnight/config.py`, `config.example.toml` (Black Mesa site, `nights = 7`, `cache_dir`, `out_dir`, sensor examples for both adapters, llm `base_url = "http://llmbox.internal:8080/v1"`, `model`, `timeout_s`, commented `api_key` note pointing to `config.local.toml`), `tests/test_config.py`.
+- **Files:** `clearnight/config.py`, `config.example.toml` (Black Mesa site, `nights = 7`, `cache_dir`, `out_dir`, sensor examples for both adapters, llm `base_url = "<from .env / config.local.toml - never committed>"`, `model`, `timeout_s`, commented `api_key` note pointing to `config.local.toml`), `tests/test_config.py`.
 - **Acceptance:** example config loads and validates; a local TOML overrides site; invalid lat/lon/adapter kind raise `ConfigError` with clear messages; no test reads `config.local.toml`.
 - **ACs:** A2, A11.
 

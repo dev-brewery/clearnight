@@ -24,7 +24,7 @@ REPO = Path(__file__).resolve().parent.parent
 BSP = REPO / "cache" / "de421.bsp"
 FORECAST_HOST = "api.open-meteo.com"
 TLE_HOST = "celestrak.org"
-LLM_HOST = "llmbox.internal"  # example config's llama.cpp endpoint
+LLM_HOST = "localhost"  # example config's llama.cpp endpoint
 
 
 class _Resp:

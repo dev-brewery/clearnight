@@ -525,3 +525,22 @@ production form. Violation receipts kept in out/ for the post's verifier section
 **Next:** T21 README+screenshots, T22 QA (A4/A11/A12 + fresh-clone A1), post
 completion. Owner Thursday: config.local.toml (site + HA sensor w/ headers + token),
 field test, log.
+
+---
+
+## 2026-10-08 (night) — T21 + T22 executed & accepted — ALL APP MUSTS PASS
+
+T21 (`fd76968`): README (4-command quick start) + docs/plan-offline.html sample.
+Orchestrator shot docs/plan-offline.png + docs/fieldlog-comparison.png via
+chrome-devtools MCP (temp-dir write + move; workspace-root restriction worked
+around without config changes). T22 (`2682e16`, sub-agent timed out post-commit,
+work complete): tests/test_accuracy.py 4/4 vs timeanddate.com reference (Oct 9
+window within 1 min; Moon down entire window confirmed; illumination trajectory
+consistent); SKY NONDETERMINISM found + fixed (wall-clock leakage in dark_windows;
+orchestrator verified double-call identical; live anomaly 20:25-05:55 eliminated);
+JOURNAL LAN-IP scrubbed from tip; stdout leak fixed; fresh-clone A1 PROVEN by
+orchestrator (clone -> pip -e -> plan --offline, exit 0). A12: 29/29 sign-offs.
+A11 ruling flagged (above). Suite: 249 tests offline.
+
+**The build is complete pending owner actions.** Next: post finalization; Thu
+dusk online run + field test; Sat publish.
