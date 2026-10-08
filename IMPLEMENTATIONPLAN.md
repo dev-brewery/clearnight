@@ -31,9 +31,9 @@ tracker → next brief). Only the builder commits.
 | T11b | http_json auth headers + HA-format regression tests | ✅ accepted — 194 tests; header + `_dewy` chain verified in-process | `4ad848f` |
 | — | `out/verify_sensor_endpoint.py` local tool (token via env) | ✅ live: degrade path exit 1 vs real endpoint | local (gitignored) |
 | T18 | Brief generation (prompt build + LLM call) | ✅ accepted — 204 tests (`691883b`); empty-nights guard T18a (`7893a9a`) | `691883b` |
-| T19 | Verifier + retry/fallback — **A6/A7 gate** | 🔵 in flight | — |
-| T20 | Brief wired into online plan | ⚪ queued | — |
-| T21 | README + screenshots | ⚪ queued | — |
+| T19 | Verifier + retry/fallback — **A6/A7 gate** | ✅ accepted — 224 tests; extractor verified live | `9cbbaf3` |
+| T20 (+a–d) | Verified brief wired into plan — **A2 complete** | ✅ accepted — 243 tests; **LIVE VERIFIED BRIEF from local Qwen** | `07a12c3`…`ca9beb2` |
+| T21 | README + screenshots | 🔵 next | — |
 | T22 | QA sweep: accuracy check (A4), audits (A11/A12), fresh-clone A1 | ⚪ queued | — |
 
 **Phase 1 gate (skeleton, Wed AM): ✅ COMPLETE** (T01–T06 + T04a). Phase 2 (sky core):

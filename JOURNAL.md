@@ -498,3 +498,30 @@ entity (or keep the mock for the field test - both work; mock never survives HA
 restart, refresh script exists on the VM).
 
 **Next:** T18 brief generation (POST_DRAFT.md now rides commits).
+
+---
+
+## 2026-10-08 — T18/T18a/T19/T20(+a-d) executed & accepted — A2/A6/A7 LIVE-PROVEN
+
+Sequence: T18 brief gen (`691883b`, 204t; empty-nights crash caught by orchestrator
+probe -> T18a `7893a9a`); T19 verifier (`9cbbaf3`, 224t; accepted deviation:
+generate_brief gained optional messages param for re-prompting); T20 integration
+(`07a12c3`, 229t; prior session timed out on live smoke, finish-brief completed
+from tree). Then the LIVE DEBUG SAGA against the real llama.cpp endpoint:
+- T20a (`a464b95`): Qwen3.8 is a reasoning model - max_tokens 400 was consumed by
+  reasoning_content, content empty. Budget -> config (2000). AMENDMENT FLAGGED for
+  owner ratification: ARCHITECTURE §6's fixed max_tokens 400 -> config-driven.
+- T20b (`ea0c753`): 2x P40 needs minutes -> example timeout_s 30 -> 300 (measured).
+- T20c (`9af7e83`): retries 2 -> 4 + verbatim-time prompting (convergence 4 -> 2
+  violations live).
+- T20d (`ca9beb2`): instrumented runs exposed three verifier FALSE POSITIVES (year
+  '2026' as meteor promise; site name exact-match; 'SE'/'No'/'PM' as names) -
+  fixed with live-captured regressions; true strictness untouched. 243 tests.
+**RESULT: LIVE VERIFIED BRIEF** (receipt: 'Go out at Black Mesa State Park (demo)
+on 2026-10-08 from 8:55 pm to 6:25 am. Face E, S, or SE... Score 100, PRIME.' -
+'brief: llm-verified (2 LLM call(s), 17 claims checked)'). A2/A6/A7 proven in
+production form. Violation receipts kept in out/ for the post's verifier section.
+
+**Next:** T21 README+screenshots, T22 QA (A4/A11/A12 + fresh-clone A1), post
+completion. Owner Thursday: config.local.toml (site + HA sensor w/ headers + token),
+field test, log.
