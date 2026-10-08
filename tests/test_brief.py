@@ -211,6 +211,39 @@ class RequestShape(unittest.TestCase):
         self.assertNotIn("authorization", seen["headers"])
 
 
+class ExtraBodyMerge(unittest.TestCase):
+    """T25: config-provided extra_body fields merge into the request body;
+    extra_body keys win over the built-in defaults."""
+
+    def _capture(self, cfg):
+        seen = {}
+
+        def urlopen(req, timeout=None):
+            seen["body"] = json.loads(req.data.decode("utf-8"))
+            return _llm_reply("ok")
+
+        with mock.patch("urllib.request.urlopen", urlopen):
+            result = generate_brief(_nights(), "Black Mesa State Park", cfg)
+        return result, seen["body"]
+
+    def test_nested_thinking_object_present_in_request(self):
+        cfg = LLMCfg("http://llm-box.local/v1", "demo-model",
+                     extra_body={"thinking": {"type": "enabled",
+                                              "level": "low"}})
+        result, body = self._capture(cfg)
+        self.assertEqual(result.source, "llm")
+        self.assertEqual(body["thinking"],
+                         {"type": "enabled", "level": "low"})
+        self.assertEqual(body["max_tokens"], 2000)  # defaults intact
+
+    def test_extra_body_keys_win_over_defaults(self):
+        cfg = LLMCfg("http://llm-box.local/v1", "demo-model",
+                     extra_body={"temperature": 0.9, "max_tokens": 100})
+        _, body = self._capture(cfg)
+        self.assertEqual(body["temperature"], 0.9)
+        self.assertEqual(body["max_tokens"], 100)
+
+
 class RetryAndFallback(unittest.TestCase):
     """One transport retry, then labeled template; offline never calls."""
 

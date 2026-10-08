@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+import time
 from dataclasses import dataclass
 
 from clearnight.brief import (
@@ -353,6 +354,12 @@ def verified_brief(
     # violations across 3 attempts without converging; the larger budget
     # gives reasoning models room to land on the exact allowed values.
     max_retries: int = 4,
+    # Overall wall-clock budget (T25): a slow endpoint can no longer stall
+    # the plan past this deadline. Measured on a monotonic clock; exceeding
+    # it stops further attempts and falls back to the labeled template with
+    # "brief deadline exceeded" recorded in the violations report.
+    budget_s: float = 480.0,
+    clock=time.monotonic,
 ):
     """Generate, verify, re-prompt with violations + exact allowed values,
     and fall back to the labeled template brief (A6/A7).
@@ -360,16 +367,24 @@ def verified_brief(
     Offline (or empty plan): template immediately, attempts 0, no LLM call.
     Each iteration calls generate_brief; a template result (LLM failed)
     short-circuits. On violations the messages grow by a follow-up user
-    message listing them plus the exact allowed values. After the budget
-    is exhausted: labeled template with attempts and remaining violations.
+    message listing them plus the exact allowed values. After the retry
+    budget or the wall-clock deadline is exhausted: labeled template with
+    attempts and remaining violations (deadline exceeded is recorded as a
+    violation).
     """
     if offline or not nights:
         return _template_result(nights, attempts=0)
 
+    start = clock()
     messages = build_prompt(nights, site_name, tz)
     attempts = 0
     violations: list[str] = []
     for _ in range(max_retries + 1):
+        if clock() - start > budget_s:
+            violations = [*violations, "brief deadline exceeded"]
+            template = _template_result(nights, attempts=attempts)
+            return type(template)(text=template.text, source="template",
+                                  attempts=attempts, violations=violations)
         result = generate_brief(nights, site_name, llm, tz=tz,
                                 messages=messages)
         attempts += result.attempts

@@ -547,7 +547,32 @@ dusk online run + field test; Sat publish.
 
 ---
 
-## 2026-10-08 (late) - OWNER RULING: purge hard-coded addresses; .env-driven endpoints
+## 2026-10-08 (late) — DETERMINATION AMENDMENT: sensor is emulated (owner directive on wording)
+
+Owner resolved the real sensor: HA has NO physical outdoor unit.
+`sensor.outdoor_climate` is a template sensor serving met.no current conditions
+for the site (source attribute says so). Metric throughout (C/%/C/hPa - adapter
+confirmed hPa-native). Config block verified gitignored in config.local.toml.
+**RETraction:** the D2 entry's 'HA sensor readings are ground truth for the
+site' language is withdrawn - readings are model values for the location; the
+system's ground truth is the FIELD LOG (human observation). Post wording per
+owner: 'readings are met.no conditions for the site served as an emulated
+sensor, not a backyard sensor.' POST_DRAFT sections 1/5 + field-test template
+updated accordingly; the 'forecast-vs-actual' view is now described as source
+agreement (met.no current vs Open-Meteo forecast). D1's ADAPTER design is
+unchanged - the pluggable feed is doing exactly its job.
+
+**Rehearsal findings (against demo site + his config.local.toml + .env z.ai):**
+(1) placeholder token -> sensor 401 -> graceful degrade (proven again);
+(2) z.ai GLM-5.3-flash is ALSO a reasoning model - empty content then long
+retries (same class as the local Qwen finding) -> fix: LLM extra_body with
+thinking disabled + wall-clock budget on the brief loop (T25);
+(3) malformed TOML in a user config tracebacks instead of a clean ConfigError
+(orchestrator wrote invalid leading-zero floats - TOML rejects them) -> T25.
+config.local.toml created by orchestrator with owner's sensor block verbatim +
+site/token placeholders for the owner to fill (secrets never handled here).
+
+## 2026-10-08 (late) — OWNER RULING: purge hard-coded addresses; .env-driven endpoints
 
 Owner: "Purge any real addresses hard-coded. That address should be coming from a
 .env. I don't care about preserving hashes if you are writing unsafe fragile code."

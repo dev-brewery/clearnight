@@ -235,12 +235,17 @@ def generate_brief(
     # T19 verifier passes pre-built messages (original prompt + follow-up
     # user message with violations + allowed values); default builds fresh.
     messages = messages or build_prompt(plan_nights, site_name, tz)
-    body = json.dumps({
+    payload = {
         "model": llm.model,
         "messages": messages,
         "temperature": 0.2,
         "max_tokens": llm.max_tokens,
-    }).encode("utf-8")
+    }
+    # Config-provided extra body fields (e.g. GLM thinking level, T25) merge
+    # over the defaults — extra_body keys win.
+    if llm.extra_body:
+        payload.update(llm.extra_body)
+    body = json.dumps(payload).encode("utf-8")
     url = llm.base_url.rstrip("/") + "/chat/completions"
     headers = {"Content-Type": "application/json"}
     if llm.api_key:

@@ -38,5 +38,14 @@ model = "/models/Qwen3.8-27B-GGUF/Qwen3.8-27B-Q6_K.gguf"
 timeout_s = 300
 # Reasoning models spend tokens on thinking before the answer; 400 strangled Qwen3.8 - measured live Oct 8
 max_tokens = 2000
+
+# OWNER DIRECTIVE (T25): GLM models on z.ai run reasoning by default and can
+# burn the token budget before answering; thinking level low keeps briefs
+# fast and non-empty. Harmless on endpoints that ignore the field (llama.cpp
+# does). Merged into the chat/completions request body; extra_body keys win
+# over the defaults.
+[llm.extra_body]
+thinking = { type = "enabled", level = "low" }
+
 # api_key lives ONLY in config.local.toml — never commit it to this file.
 # api_key = "sk-..."

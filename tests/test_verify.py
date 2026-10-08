@@ -286,6 +286,39 @@ class TestVerifiedBrief(unittest.TestCase):
         result, _ = self._run([], offline=True)
         self.assertEqual(result.source, "template")
 
+    def test_wall_clock_deadline_stops_attempts(self):
+        # T25: a slow endpoint cannot stall the plan — once the monotonic
+        # wall-clock budget is exceeded, no further attempts are made and
+        # the template result records "brief deadline exceeded".
+        calls = []
+        tick = {"t": 0.0}
+
+        def slow_stub(plan_nights, site_name, llm, offline=False, tz=None,
+                      messages=None):
+            calls.append(1)
+            tick["t"] += 200.0  # each attempt burns 200 s
+            return BriefResult(text=BAD_BRIEF, source="llm", attempts=1,
+                               violations=[])
+
+        with mock.patch("clearnight.verify.generate_brief",
+                        side_effect=slow_stub):
+            result = verified_brief(_nights(), SITE, CFG, TZ,
+                                    budget_s=480.0,
+                                    clock=lambda: tick["t"])
+        self.assertEqual(result.source, "template")
+        self.assertEqual(len(calls), 3)  # t=0, 200, 400 ok; 600 > 480 stop
+        self.assertEqual(result.attempts, 3)
+        self.assertIn("brief deadline exceeded", result.violations)
+        self.assertIn("Template brief", result.text)
+
+    def test_fast_path_within_deadline_unaffected(self):
+        # Normal fast path: a fixed zero clock never trips the budget.
+        result, calls = self._run([BAD_BRIEF, BAD_BRIEF, GOOD_BRIEF],
+                                  clock=lambda: 0.0)
+        self.assertEqual((result.source, result.attempts, result.violations),
+                         ("llm", 3, []))
+        self.assertEqual(len(calls), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

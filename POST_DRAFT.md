@@ -22,10 +22,13 @@ It fuses three kinds of data into a ranked list of nights:
   skyfield and a cached JPL ephemeris.
 - **The weather** — keyless Open-Meteo hourly forecasts sliced to each night's
   dark window: cloud layers, humidity, visibility, dew point, wind.
-- **A local climate sensor** — your own temperature/humidity/pressure readings
-  (Home Assistant, ESPHome, or anything that can write a CSV) feed a dew-risk
-  estimate and a pressure trend, and a forecast-vs-actual comparison so you can
-  see how far to trust tonight's forecast.
+- **A sensor-shaped local feed** — the app reads whatever serves current site
+  conditions over HTTP: a real backyard instrument, or, as in our instance, a
+  Home Assistant template sensor emulating one from met.no conditions for the
+  site. It feeds the dew-risk estimate and a pressure trend, and a
+  source-agreement view (current conditions vs the forecast) so you can see how
+  far to trust tonight's forecast. Ground truth in this system is the field log
+  — the human record of what the sky actually did.
 
 Each night gets a deterministic 0–100 score with a per-factor breakdown and a
 plain verdict — PRIME, WORTH IT, Marginal, or STAY IN BED — and the plan renders
@@ -130,7 +133,9 @@ the full record of how each determination was surfaced and ratified.
 
 [TEMPLATE — fill from the actual log entry:]
 - What the plan predicted for Oct 9 (score, verdict, window, Draconids peak,
-  moon conditions) — screenshot of that night's section.
+  moon conditions) — screenshot of that night's section. The sensor feed shown
+  is met.no site conditions served through Home Assistant as an emulated sensor
+  — stated as such, not claimed as a backyard instrument.
 - What actually happened — the field-log entry: went out / clearness / meteors
   counted / ISS seen / notes.
 - Prediction beside outcome, honestly: if clouds rolled in, say so and show the

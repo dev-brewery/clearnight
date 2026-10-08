@@ -7,12 +7,45 @@ import os
 import re
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from clearnight.config import Config, ConfigError, load_config
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = REPO_ROOT / "config.example.toml"
+
+# Module isolation (T25 rehearsal finding): a real .env at the repo root
+# (gitignored, owner-maintained) must not leak into tests. Remove any real
+# CLEARNIGHT_* overrides and no-op load_dotenv for the module's duration;
+# the dotenv behaviour itself is tested by TestDotenv against temp files.
+_CLEARNIGHT_KEYS = (
+    "CLEARNIGHT_LLM_BASE_URL", "CLEARNIGHT_LLM_MODEL",
+    "CLEARNIGHT_LLM_API_KEY", "CLEARNIGHT_SENSOR_URL",
+)
+_ENV_SNAPSHOT: dict = {}
+_DOTENV_PATCHER = None
+
+
+def setUpModule():
+    global _ENV_SNAPSHOT, _DOTENV_PATCHER
+    _ENV_SNAPSHOT = {k: os.environ.get(k) for k in _CLEARNIGHT_KEYS}
+    for k in _CLEARNIGHT_KEYS:
+        os.environ.pop(k, None)
+    _DOTENV_PATCHER = mock.patch("clearnight.config.load_dotenv",
+                                 lambda path=None: None)
+    _DOTENV_PATCHER.start()
+
+
+def tearDownModule():
+    global _DOTENV_PATCHER
+    if _DOTENV_PATCHER is not None:
+        _DOTENV_PATCHER.stop()
+    for k, v in _ENV_SNAPSHOT.items():
+        if v is None:
+            os.environ.pop(k, None)
+        else:
+            os.environ[k] = v
 
 
 def write_and_load(toml_text: str) -> Config:
@@ -25,12 +58,17 @@ def write_and_load(toml_text: str) -> Config:
 class TestExampleConfig(unittest.TestCase):
     def test_example_loads_and_validates(self):
         import os
-        cwd = os.getcwd()
-        os.chdir(REPO_ROOT)
-        try:
-            cfg = load_config()
-        finally:
-            os.chdir(cwd)
+        # Isolated dir: only the example file, so the owner's live
+        # config.local.toml at the repo root cannot alter expectations.
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "config.example.toml").write_text(
+                EXAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
+            cwd = os.getcwd()
+            os.chdir(d)
+            try:
+                cfg = load_config()
+            finally:
+                os.chdir(cwd)
         self.assertEqual(cfg.site.name, "Black Mesa State Park (demo)")
         self.assertAlmostEqual(cfg.site.lat, 36.85)
         self.assertAlmostEqual(cfg.site.lon, -102.88)
@@ -189,6 +227,73 @@ class TestNoPrivateIPsCommitted(unittest.TestCase):
             self.assertEqual(hits, [], f"{name} contains private IP(s): {hits}")
 
 
+class TestMalformedToml(unittest.TestCase):
+    def test_malformed_toml_raises_clean_config_error_naming_file(self):
+        # T25: a user typo in TOML is a clean ConfigError naming the file
+        # and the parse error — never a raw traceback.
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "broken.toml"
+            p.write_text('[site]\nname = "x"\nlat = [unterminated',
+                         encoding="utf-8")
+            with self.assertRaises(ConfigError) as cm:
+                load_config(str(p))
+            msg = str(cm.exception)
+        self.assertIn("broken.toml", msg)
+        self.assertIn("invalid TOML", msg)
+
+
+class TestExtraBody(unittest.TestCase):
+    # T25: extra request-body fields (e.g. GLM thinking level) validated and
+    # passed through. Minimal config; the committed example's thinking
+    # table is covered separately.
+    BASE = """\
+[site]
+name = "T"
+lat = 0.0
+lon = 0.0
+elevation_m = 0.0
+tz = "UTC"
+
+[sensor]
+kind = "csv"
+path = "x.csv"
+
+[llm]
+base_url = "http://localhost:8080/v1"
+model = "m"
+"""
+
+    def load_with(self, llm_extra: str) -> Config:
+        # Append after the whole [llm] body so the sub-table cannot swallow
+        # the keys that follow it.
+        return write_and_load(self.BASE + "\n" + llm_extra)
+
+    def test_extra_body_table_parsed(self):
+        cfg = self.load_with(
+            '[llm.extra_body]\n'
+            'thinking = { type = "enabled", level = "low" }\n')
+        self.assertEqual(
+            cfg.llm.extra_body,
+            {"thinking": {"type": "enabled", "level": "low"}})
+
+    def test_committed_example_ships_thinking_low(self):
+        cfg = load_config(str(EXAMPLE))
+        self.assertEqual(
+            cfg.llm.extra_body,
+            {"thinking": {"type": "enabled", "level": "low"}})
+
+    def test_extra_body_must_be_a_table(self):
+        with self.assertRaises(ConfigError) as cm:
+            self.load_with("extra_body = 5")
+        self.assertIn("llm.extra_body", str(cm.exception))
+
+    def test_extra_body_values_must_be_json_serializable(self):
+        # TOML dates deserialize to datetime.date, which is not JSON-safe.
+        with self.assertRaises(ConfigError) as cm:
+            self.load_with("extra_body = { when = 1979-05-27 }")
+        self.assertIn("llm.extra_body", str(cm.exception))
+
+
 class TestDotenv(unittest.TestCase):
     """T23: .env parsing and CLEARNIGHT_* env overrides."""
 
@@ -209,6 +314,8 @@ class TestDotenv(unittest.TestCase):
         keys = ["CLEARNIGHT_LLM_BASE_URL", "CLEARNIGHT_LLM_MODEL",
                 "CLEARNIGHT_SENSOR_URL", "CLEARNIGHT_LLM_API_KEY"]
         saved = {k: os.environ.pop(k, None) for k in keys}
+        # this test exercises the real load_dotenv, not the module no-op
+        _DOTENV_PATCHER.stop()
         try:
             with tempfile.TemporaryDirectory() as d:
                 root = Path(d)
@@ -226,6 +333,7 @@ class TestDotenv(unittest.TestCase):
             # empty .env value becomes "" - harmless (api_key optional str)
             self.assertEqual(cfg.llm.api_key, "")
         finally:
+            _DOTENV_PATCHER.start()
             for k, v in saved.items():
                 if v is not None:
                     os.environ[k] = v
@@ -266,6 +374,85 @@ class TestDotenv(unittest.TestCase):
                 cfg = load_config(str(p))
             self.assertEqual(cfg.llm.base_url, "http://env:4/v1")
         finally:
+            for k, v in saved.items():
+                if v is not None:
+                    os.environ[k] = v
+                else:
+                    os.environ.pop(k, None)
+
+
+class TestLocalConfigIsolation(unittest.TestCase):
+    """T25 pin test: discovery loads see local files only in their own cwd.
+    Proves both directions: (a) a discovery load from a cwd holding fake
+    local config picks THAT cwd's files up, and (b) a discovery load from a
+    pristine temp cwd cannot see the repo root's files at all. Never creates
+    anything in the repo root."""
+
+    TOML = ('[site]\nname = "FakeLocal"\nlat = 1\nlon = 2\nelevation_m = 100\n'
+            'tz = "UTC"\n\n[sensor]\nkind = "csv"\npath = "s.csv"\n\n'
+            '[llm]\nbase_url = "http://local:9/v1"\nmodel = "local-model"\n')
+
+    def _stop_dotenv_noop(self):
+        _DOTENV_PATCHER.stop()
+
+    def _restart_dotenv_noop(self):
+        _DOTENV_PATCHER.start()
+
+    def test_discovery_picks_up_local_files_in_its_own_cwd(self):
+        keys = ["CLEARNIGHT_LLM_BASE_URL", "CLEARNIGHT_LLM_MODEL",
+                "CLEARNIGHT_SENSOR_URL", "CLEARNIGHT_LLM_API_KEY"]
+        saved = {k: os.environ.pop(k, None) for k in keys}
+        self._stop_dotenv_noop()
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                (root / "config.example.toml").write_text(self.TOML,
+                                                          encoding="utf-8")
+                (root / "config.local.toml").write_text(
+                    '[site]\nname = "FakeLocalOverride"\n\n'
+                    '[llm]\nmodel = "override-model"\n', encoding="utf-8")
+                (root / ".env").write_text(
+                    "CLEARNIGHT_LLM_BASE_URL=http://dotenv:9/v1\n",
+                    encoding="utf-8")
+                cwd = os.getcwd()
+                os.chdir(root)
+                try:
+                    cfg = load_config()
+                finally:
+                    os.chdir(cwd)
+            self.assertEqual(cfg.site.name, "FakeLocalOverride")
+            self.assertEqual(cfg.llm.model, "override-model")
+            self.assertEqual(cfg.llm.base_url, "http://dotenv:9/v1")
+        finally:
+            self._restart_dotenv_noop()
+            for k, v in saved.items():
+                if v is not None:
+                    os.environ[k] = v
+                else:
+                    os.environ.pop(k, None)
+
+    def test_discovery_from_pristine_cwd_ignores_repo_root_files(self):
+        # Run from the repo root first to show config IS found there, then
+        # from a pristine temp dir where discovery must fail: the repo
+        # root's example/local/.env files are invisible to it.
+        self.assertEqual(load_config(str(EXAMPLE)).site.name,
+                         "Black Mesa State Park (demo)")
+        keys = ["CLEARNIGHT_LLM_BASE_URL", "CLEARNIGHT_LLM_MODEL",
+                "CLEARNIGHT_SENSOR_URL", "CLEARNIGHT_LLM_API_KEY"]
+        saved = {k: os.environ.pop(k, None) for k in keys}
+        self._stop_dotenv_noop()
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                cwd = os.getcwd()
+                os.chdir(d)
+                try:
+                    with self.assertRaises(ConfigError) as cm:
+                        load_config()
+                finally:
+                    os.chdir(cwd)
+            self.assertIn("no config found", str(cm.exception))
+        finally:
+            self._restart_dotenv_noop()
             for k, v in saved.items():
                 if v is not None:
                     os.environ[k] = v

@@ -7,6 +7,7 @@ always name the offending field.
 
 from __future__ import annotations
 
+import json
 import os
 import tomllib
 from dataclasses import dataclass
@@ -42,6 +43,10 @@ class LLMCfg:
     # Reasoning models spend tokens on thinking before the answer; a small
     # budget yields finish_reason "length" with empty content (T20a).
     max_tokens: int = 2000
+    # Extra request-body fields merged into the chat/completions JSON
+    # (extra_body keys win over defaults). e.g. GLM thinking level:
+    # {"thinking": {"type": "enabled", "level": "low"}}.
+    extra_body: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -135,8 +140,17 @@ def _validate(site: dict[str, Any], sensor: dict[str, Any], llm: dict[str, Any],
     max_tokens = llm.get("max_tokens", 2000)
     if not isinstance(max_tokens, int) or isinstance(max_tokens, bool) or max_tokens <= 0:
         raise _err("llm.max_tokens", "must be a positive int")
+    extra_body = llm.get("extra_body")
+    if extra_body is not None:
+        if not isinstance(extra_body, dict):
+            raise _err("llm.extra_body", "must be a [llm.extra_body] table")
+        try:
+            json.dumps(extra_body)
+        except (TypeError, ValueError) as e:
+            raise _err("llm.extra_body",
+                       f"must be JSON-serializable ({e})") from e
     llm_cfg = LLMCfg(str(llm["base_url"]), str(llm["model"]), api_key,
-                     ltimeout, max_tokens)
+                     ltimeout, max_tokens, extra_body)
 
     for name, v in (("cache_dir", cache_dir), ("out_dir", out_dir)):
         if v is not None and not isinstance(v, (str, Path)):
@@ -147,8 +161,13 @@ def _validate(site: dict[str, Any], sensor: dict[str, Any], llm: dict[str, Any],
 
 
 def _load_toml(path: Path) -> dict[str, Any]:
-    with path.open("rb") as f:
-        return tomllib.load(f)
+    try:
+        with path.open("rb") as f:
+            return tomllib.load(f)
+    except tomllib.TOMLDecodeError as e:
+        # A malformed user config is a clean error naming the file and the
+        # parse problem — never a traceback (T25).
+        raise ConfigError(f"invalid TOML in {path}: {e}") from e
 
 
 _ENV_KEYS = {
