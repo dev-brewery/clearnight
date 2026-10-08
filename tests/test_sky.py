@@ -173,6 +173,26 @@ class TestDarkWindowsSkippable(unittest.TestCase):
             self.assertLess((w.end_utc - w.start_utc).total_seconds(),
                             14 * 3600)
 
+    def test_dark_windows_deterministic(self):
+        # T22 regression: dark_windows / moon_info must be pure functions of
+        # (site, dates, eph) — identical inputs, identical outputs, no
+        # wall-clock anchoring anywhere in the sampling.
+        from clearnight.sky import dark_windows, moon_info
+        w1 = dark_windows(DEMO, dt.date(2026, 10, 7), 4, self.eph)
+        w2 = dark_windows(DEMO, dt.date(2026, 10, 7), 4, self.eph)
+        self.assertEqual(w1, w2)
+        m1 = [moon_info(DEMO, w, self.eph) for w in w1]
+        m2 = [moon_info(DEMO, w, self.eph) for w in w2]
+        self.assertEqual(m1, m2)
+
+    def test_sky_module_has_no_wall_clock(self):
+        import inspect
+        from clearnight import sky
+        src = inspect.getsource(sky)
+        for banned in ("now()", "utcnow", "time.time", "today()"):
+            self.assertNotIn(banned, src,
+                             f"sky.py uses wall-clock call {banned!r}")
+
 
 if __name__ == "__main__":
     unittest.main()

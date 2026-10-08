@@ -472,7 +472,7 @@ T21 docs/screenshots, T22 QA. Thursday reminders for owner: config.local.toml
 
 ## 2026-10-08 — Owner's HA agent: mock endpoints live; T11b briefed (auth gap)
 
-Owner ran a delegated agent on the HA VM (ha.internal:8123). Four preset mock
+Owner ran a delegated agent on the HA VM (LAN). Four preset mock
 entities verified 200: _dry (spread 11.3 -> low), _dewy (1.2 -> high), _falling,
 _broken (humidity absent). Live-captured timestamp format:
 2026-10-07T21:11:27.618857+00:00. Orchestrator verified in-process:

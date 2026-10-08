@@ -1,0 +1,26 @@
+{
+  "_source": "timeanddate.com, captured 2026-10-08 for Black Mesa State Park, OK (36.85 N, -102.88 W), America/Chicago (CDT, UTC-5). Astronomical night: https://www.timeanddate.com/astronomy/@5.55127 (Oct 7 2026: 20:51-06:26). Sun table: https://www.timeanddate.com/sun/@5.55127. Moon table: https://www.timeanddate.com/moon/@5.55127 (Oct 9 New Moon 10:50 am, illumination at lunar noon Oct 8 4.3% / Oct 9 1.0% / Oct 10 0.1%; moonrise Oct 8 5:47 am). Oct 9/10 night bounds are DERIVED from the Oct 7 pair plus the tabulated daily drift (Oct 9 ~20:49/06:28, Oct 10 ~20:50/06:29); lunar-noon times other than Oct 9 10:50 are approximate (local noon).",
+  "site": {"lat": 36.85, "lon": -102.88, "tz": "America/Chicago"},
+  "nights": {
+    "2026-10-07": {"dark_start_local": "20:51", "dark_end_local": "06:26"},
+    "2026-10-08": {"dark_start_local": "20:52", "dark_end_local": "06:27", "_note": "derived (between Oct 7 and Oct 9 drift)"},
+    "2026-10-09": {"dark_start_local": "20:49", "dark_end_local": "06:28", "_note": "derived"},
+    "2026-10-10": {"dark_start_local": "20:50", "dark_end_local": "06:29", "_note": "derived"}
+  },
+  "moon": {
+    "2026-10-09": {"moonrise_local": null, "moonset_local": null, "down_all_night": true},
+    "2026-10-08_morning_moonrise_local": "05:47",
+    "illumination_lunar_noon": {
+      "2026-10-08": 0.043,
+      "2026-10-09": 0.010,
+      "2026-10-10": 0.001
+    },
+    "new_moon_local": "2026-10-09T10:50"
+  },
+  "tolerances": {
+    "window_minutes": 5,
+    "moonrise_minutes": 6,
+    "illumination_abs": 0.02,
+    "_note": "moonrise tolerance 6 min: timeanddate quotes upper-limb-plus-refraction moonrise (~2 min before the center-of-disk alt=0 crossing that sky.py reports); 5 min geometric + ~1-2 min convention offset."
+  }
+}

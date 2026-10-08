@@ -96,6 +96,10 @@ class TestMatch(unittest.TestCase):
 class TestLogCli(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = Path(tempfile.mkdtemp(prefix="clearnight-logcli-"))
+        # keep the suite output clean: capture in-process main() prints (T22)
+        self._stdout_patch = mock.patch("sys.stdout", io.StringIO())
+        self._stdout_patch.start()
+        self.addCleanup(self._stdout_patch.stop)
         shutil.copy(REPO / "config.example.toml",
                     self.tmp / "config.example.toml")
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
@@ -131,8 +135,10 @@ class TestLogCli(unittest.TestCase):
         self.assertEqual(cm.exception.code, 2)
 
     def test_two_appends_two_lines(self) -> None:
-        main(["log", "--date", "2026-10-09", "--went-out"])
-        main(["log", "--date", "2026-10-09"])
+        # redirect both calls: keep the suite output clean (T22 hygiene).
+        with contextlib.redirect_stdout(io.StringIO()):
+            main(["log", "--date", "2026-10-09", "--went-out"])
+            main(["log", "--date", "2026-10-09"])
         lines = (self.tmp / "out" / "fieldlog.jsonl").read_text(
             encoding="utf-8").splitlines()
         self.assertEqual(len(lines), 2)
@@ -141,6 +147,10 @@ class TestLogCli(unittest.TestCase):
 class TestPlanIntegration(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = Path(tempfile.mkdtemp(prefix="clearnight-planlog-"))
+        # keep the suite output clean: capture in-process main() prints (T22)
+        self._stdout_patch = mock.patch("sys.stdout", io.StringIO())
+        self._stdout_patch.start()
+        self.addCleanup(self._stdout_patch.stop)
         shutil.copy(REPO / "config.example.toml",
                     self.tmp / "config.example.toml")
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
