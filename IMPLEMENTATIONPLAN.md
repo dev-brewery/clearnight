@@ -35,6 +35,13 @@ tracker → next brief). Only the builder commits.
 | T20 (+a–d) | Verified brief wired into plan — **A2 complete** | ✅ accepted — 243 tests; **LIVE VERIFIED BRIEF from local Qwen** | `07a12c3`…`ca9beb2` |
 | T21 | README + screenshots | ✅ accepted — README + sample plan; PNGs shot by orchestrator via browser | `fd76968` + `2682e16` |
 | T22 | QA sweep: accuracy (A4), audits, fresh-clone A1 | ✅ accepted — 249 tests; determinism fixed; fresh-clone proven | `2682e16` |
+| T24 | Record owner-ordered history purge; A11 closed | ✅ accepted | `ad2a90c` |
+| T25 | GLM thinking=low (extra_body), brief budget, clean config errors; suite immune to local config | ✅ accepted — 264 tests WITH live .env + config.local.toml present | `8941f8b` |
+
+**THURSDAY READINESS:** everything live-proven except the owner's site coordinates
+(the one remaining blank in config.local.toml). Rehearsal at placeholder 0.0/0.0
+exercised the full stack: sensor live read (met.no via HA), z.ai GLM-5.3-flash
+content with thinking=low, verifier rejecting bogus claims, honest fallback.
 
 **STATE: ALL APP MUSTS PASS.** A1 ✓ fresh-clone proven · A2 ✓ live+verified brief · A3 ✓ ·
 A4 ✓ vs timeanddate (±1 min actual) · A5 ✓ · A6 ✓ · A7 ✓ live-proven · A8 ✓ · A9 ✓ ·

@@ -572,6 +572,28 @@ thinking disabled + wall-clock budget on the brief loop (T25);
 config.local.toml created by orchestrator with owner's sensor block verbatim +
 site/token placeholders for the owner to fill (secrets never handled here).
 
+## 2026-10-08 (late) — T25 saga + full Thursday rehearsal (placeholder site)
+
+T25 first run timed out with WIP; orchestrator diagnosed the 2 failures as
+ENVIRONMENTAL: the owner's live .env + config.local.toml in repo root leaked into
+two tests that assumed a pristine checkout. Real robustness gap, fixed in
+T25-FINISH (`8941f8b`): config tests isolated (temp cwd + env scrub + explicit
+paths), new pin test proves immunity; suite green (264) WITH local files present.
+T25 also delivered the owner's directive - GLM requests carry thinking level
+"low" via generic LLMCfg.extra_body (config-only, no code change for future
+providers), brief loop wall-clock budget (480 s), and clean ConfigError on
+malformed TOML (caught when the orchestrator wrote invalid leading-zero floats).
+
+REHEARSAL (placeholder site 0.0/0.0, everything else real): sensor = LIVE READ
+(met.no via HA template sensor, token working); z.ai GLM-5.3-flash returns
+content with thinking=low (empty-content class dead); verifier rejected 6
+violations at the junk site - strictness holding; honest template fallback;
+total run 2m38s. The one remaining blank for Thursday: owner's lat/lon/elevation
+in config.local.toml.
+
+**Next:** owner fills coordinates; Thu dusk real run; field test; log; post
+finalization; Sat publish.
+
 ## 2026-10-08 (late) — OWNER RULING: purge hard-coded addresses; .env-driven endpoints
 
 Owner: "Purge any real addresses hard-coded. That address should be coming from a
