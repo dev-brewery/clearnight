@@ -654,6 +654,26 @@ historical narrative only - post-purge history begins at the rewritten chain
 
 ---
 
+## 2026-10-09 — OWNER DIRECTIVE (final): mock-only completion, NO field test, publish TODAY
+
+Owner: "Again, YOU ARE COMPLETING THE POC WITH MOCK DATA!! ... THERE WILL BE NO
+TEST!!! THE CHALLENGE SUBMISSION IS DUE TODAY!"
+
+Executed: POST_DRAFT.md finalized as the publish-ready post body - field-test
+section rewritten as 'The outdoor loop, demonstrated with mock data' (explicit:
+no field test was conducted; sensor feed is mock; prediction-vs-outcome shown
+with the labeled demo entry; sky/weather/scoring remain real computed data for
+the public demo site). Test count updated (269). DevRelay section cut. Repo
+URL embedded (github.com/dev-brewery/clearnight; images via raw.githubusercontent
+main branch - owner must push with default branch main or adjust links).
+Sat-6PM anchor VOID - submission due today per owner. Remaining owner actions:
+(1) push repo public as dev-brewery/clearnight (default branch main),
+(2) create DEV post on dev.to/devbrewery with POST_DRAFT body below its header
++ the two docs/ images, tags devchallenge + hf26challenge, publish.
+Orchestrator cannot push/publish (credentials/accounts are owner-only).
+
+---
+
 ## 2026-10-09 — OWNER CORRECTION (final): mock data, no HA, no auth, no CSV
 
 Owner: "STOP TRYING TO AUTH TO HA. MOCK THE DATA." and "You are using the Home
