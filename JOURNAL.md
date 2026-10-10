@@ -125,7 +125,7 @@ fixture derived from public keyless weather API); fold `AGENTS.md` + `.pi/skills
 into the §2 file map.
 
 **D6 — Offline fixture strategy. ANSWERED: A, fixture epoch (as designed).**
-Committed fixtures cover the fixed demo week (Oct 6–12, 2026, [redacted site]); `--offline`
+Committed fixtures cover the fixed demo week (Oct 6–12, 2026, Black Mesa); `--offline`
 pins today to the reference date; demo + A1/A10 bit-for-bit reproducible; Draconids
 evidence night sits inside the week; `de421.bsp` stays gitignored with recorded
 `sky.json` as the offline sky source; new offline weeks via maintainer
@@ -231,7 +231,7 @@ include JOURNAL.md so the repo carries the log.
 
 Config module + example TOML per ARCHITECTURE §4 incl. D4 (optional api_key,
 commented, config.local.toml-only note). 39 tests total green; orchestrator re-ran
-suite, spot-checked [redacted site] values + api_key guidance. JOURNAL.md now rides task
+suite, spot-checked Black Mesa values + api_key guidance. JOURNAL.md now rides task
 commits (convention set).
 
 **ORCHESTRATOR RULING — tzdata exception (FLAGGED FOR OWNER RATIFICATION):** Windows
@@ -319,7 +319,7 @@ accepted): first test draft used bare functions; rewritten to unittest.TestCase.
 sky.py per ARCHITECTURE §4 (bsp cached + gitignored; SkyUnavailable offline guard;
 sampling helpers take altitude callbacks for offline tests). sky.json recorded live:
 7 nights; orchestrator verified Oct 9 window 01:50–11:25 UTC (9.58 h — plausible
-for the demo latitude early Oct) and Moon 0.26% New, never up, max_alt −18° — D3 Draconids
+for 36.85°N early Oct) and Moon 0.26% New, never up, max_alt −18° — D3 Draconids
 precondition met with margin. 72 tests green offline. Builder kept recording script
 in gitignored out/ (flagged, accepted). Tromsø midsummer case auto-skips without bsp.
 
@@ -517,7 +517,7 @@ from tree). Then the LIVE DEBUG SAGA against the real llama.cpp endpoint:
 - T20d (`ca9beb2`): instrumented runs exposed three verifier FALSE POSITIVES (year
   '2026' as meteor promise; site name exact-match; 'SE'/'No'/'PM' as names) -
   fixed with live-captured regressions; true strictness untouched. 243 tests.
-**RESULT: LIVE VERIFIED BRIEF** (receipt: 'Go out at [redacted demo site]
+**RESULT: LIVE VERIFIED BRIEF** (receipt: 'Go out at Black Mesa State Park (demo)
 on 2026-10-08 from 8:55 pm to 6:25 am. Face E, S, or SE... Score 100, PRIME.' -
 'brief: llm-verified (2 LLM call(s), 17 claims checked)'). A2/A6/A7 proven in
 production form. Violation receipts kept in out/ for the post's verifier section.
