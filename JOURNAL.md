@@ -623,6 +623,18 @@ LOCATION-REDACTION ORDER (owner, Oct 8): "do not have anything localized in the
 public repo" - all site identifiers removed from tracked files; coordinates live
 only in gitignored config.local.toml.
 
+## 2026-10-08 (final addendum) — POC FRAMING: mock sensor data only (owner)
+
+Owner: "We're going to run with mock data only, so complete T27 with dummy values
+from the endpoint. This is a proof of concept for hacktoberfest."
+Executed: config.local.toml sensor points at the HA mock preset (_dry: 21.4C /
+48% / 1013.2 hPa / 10.1C -> spread 11.3 'low'); met.no template-sensor framing
+retired from POST_DRAFT (adapter pluggability is the demonstrated feature; mock
+preset stated as such in the field-test section); T27 (footer truthfulness)
+built with the endpoint's dummy values baked into tests. The field test's plan
+will carry mock sensor values, honestly labeled - ground truth remains the
+human field log.
+
 ## 2026-10-08 (late) — OWNER RULING: purge hard-coded addresses; .env-driven endpoints
 
 Owner: "Purge any real addresses hard-coded. That address should be coming from a

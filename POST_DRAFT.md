@@ -23,12 +23,12 @@ It fuses three kinds of data into a ranked list of nights:
 - **The weather** — keyless Open-Meteo hourly forecasts sliced to each night's
   dark window: cloud layers, humidity, visibility, dew point, wind.
 - **A sensor-shaped local feed** — the app reads whatever serves current site
-  conditions over HTTP: a real backyard instrument, or, as in our instance, a
-  Home Assistant template sensor emulating one from met.no conditions for the
-  site. It feeds the dew-risk estimate and a pressure trend, and a
-  source-agreement view (current conditions vs the forecast) so you can see how
-  far to trust tonight's forecast. Ground truth in this system is the field log
-  — the human record of what the sky actually did.
+  conditions over HTTP: a real instrument, a Home Assistant entity, or (as in
+  this proof of concept) a mock endpoint serving preset values through the
+  same adapter. It feeds the dew-risk estimate and a pressure trend, and a
+  source-agreement view against the forecast. The adapter layer is the point:
+  any JSON source plugs in with a config change and zero code. Ground truth in
+  this system is the field log — the human record of what the sky actually did.
 
 Each night gets a deterministic 0–100 score with a per-factor breakdown and a
 plain verdict — PRIME, WORTH IT, Marginal, or STAY IN BED — and the plan renders
@@ -134,8 +134,8 @@ the full record of how each determination was surfaced and ratified.
 [TEMPLATE — fill from the actual log entry:]
 - What the plan predicted for Oct 9 (score, verdict, window, Draconids peak,
   moon conditions) — screenshot of that night's section. The sensor feed shown
-  is met.no site conditions served through Home Assistant as an emulated sensor
-  — stated as such, not claimed as a backyard instrument.
+  is the mock preset endpoint (PoC framing): stated as such — the adapter is
+  the demonstrated feature, not a live instrument.
 - What actually happened — the field-log entry: went out / clearness / meteors
   counted / ISS seen / notes.
 - Prediction beside outcome, honestly: if clouds rolled in, say so and show the

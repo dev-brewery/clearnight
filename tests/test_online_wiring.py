@@ -14,6 +14,7 @@ import shutil
 import tempfile
 import time
 import unittest
+import urllib.error
 from pathlib import Path
 from unittest import mock
 
@@ -25,6 +26,13 @@ BSP = REPO / "cache" / "de421.bsp"
 FORECAST_HOST = "api.open-meteo.com"
 TLE_HOST = "celestrak.org"
 LLM_HOST = "localhost"  # example config's llama.cpp endpoint
+SENSOR_HOST = "ha-mock.test"  # T27: mocked HA sensor endpoint
+
+# Owner's HA mock presets (T27): dummy values, never real site data.
+_DRY_BODY = (b'{"temperature_c": 21.4, "humidity_pct": 48, '
+             b'"pressure_hpa": 1013.2, "dew_point_c": 10.1, '
+             b'"last_updated": "2025-10-09T01:00:00+00:00"}')
+_BROKEN_BODY = b'{"temperature_c": 12.0}'  # humidity missing
 
 
 class _Resp:
@@ -41,9 +49,14 @@ class _Resp:
         return False
 
 
-def _fake_urlopen(calls: list[str], forecast_payload: bytes, tle_payload: bytes):
+def _fake_urlopen(calls: list[str], forecast_payload: bytes, tle_payload: bytes,
+                  sensor_payload: bytes | Exception | None = None):
     def urlopen(url, timeout=None):
         u = str(getattr(url, "full_url", url))
+        if SENSOR_HOST in u:  # T27: mocked HA sensor endpoint
+            if isinstance(sensor_payload, Exception):
+                raise sensor_payload
+            return _Resp(sensor_payload)  # type: ignore[arg-type]
         if LLM_HOST in u:  # not counted: LLM attempts are not data sources
             raise OSError("llm endpoint unreachable (mock)")
         calls.append(u)
@@ -73,16 +86,63 @@ class OnlineBase(unittest.TestCase):
         self.addCleanup(os.chdir, self.cwd)
         self.calls: list[str] = []
 
-    def run_online(self, *argv: str) -> tuple[int, str]:
+    def run_online(self, *argv: str, sensor_payload: bytes | Exception | None = None) -> tuple[int, str]:
         out = io.StringIO()
         with mock.patch("urllib.request.urlopen",
                         _fake_urlopen(self.calls,
                                       (FIXTURES_DIR / "forecast.json")
                                       .read_bytes(),
-                                      (FIXTURES_DIR / "tle.txt").read_bytes())):
+                                      (FIXTURES_DIR / "tle.txt").read_bytes(),
+                                      sensor_payload=sensor_payload)):
             with contextlib.redirect_stdout(out):
                 rc = run_plan(["plan", "--nights", "1", *argv])
         return rc, out.getvalue()
+
+
+@unittest.skipUnless(BSP.is_file(), "de421.bsp not in local cache")
+class TestSensorProvenanceHttpJson(OnlineBase):
+    """T27: the footer states the sensor read outcome, never overstates."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        cfg = (REPO / "config.example.toml").read_text(encoding="utf-8")
+        cfg = cfg.replace(
+            '[sensor]\nkind = "csv"\npath = "clearnight/fixtures/sensor.csv"',
+            '[sensor]\nkind = "http_json"\n'
+            f'url = "http://{SENSOR_HOST}/api/states/sensor.mock"\n'
+            'field_map = { timestamp = "last_updated", '
+            'temperature = "temperature_c", humidity = "humidity_pct", '
+            'pressure = "pressure_hpa", dew_point = "dew_point_c" }')
+        (self.tmp / "config.example.toml").write_text(cfg, encoding="utf-8")
+
+    def test_dry_preset_footer_live_and_low_risk(self) -> None:
+        rc, out = self.run_online(sensor_payload=_DRY_BODY)
+        self.assertEqual(rc, 0)
+        self.assertIn("sensor: http_json (live, 1 reading @ "
+                      "2025-10-09T01:00:00+00:00)", out)
+        self.assertIn("spread 11.3C", out)
+        self.assertIn("dew risk: low", out)
+        html = (self.tmp / "out" / "plan.html").read_text(encoding="utf-8")
+        self.assertIn("sensor: http_json (live, 1 reading @ "
+                      "2025-10-09T01:00:00+00:00)", html)
+
+    def test_401_footer_degraded_exit_zero_no_traceback(self) -> None:
+        err = urllib.error.HTTPError(
+            f"http://{SENSOR_HOST}/api/states/sensor.mock", 401,
+            "Unauthorized", None, None)
+        rc, out = self.run_online(sensor_payload=err)
+        self.assertEqual(rc, 0)
+        self.assertIn("sensor: http_json (degraded: HTTPError"
+                      " - dew input falls back to forecast)", out)
+        self.assertNotIn("Traceback", out)
+        html = (self.tmp / "out" / "plan.html").read_text(encoding="utf-8")
+        self.assertIn("degraded: HTTPError", html)
+
+    def test_missing_humidity_still_live_and_renders(self) -> None:
+        rc, out = self.run_online(sensor_payload=_BROKEN_BODY)
+        self.assertEqual(rc, 0)
+        self.assertIn("sensor: http_json (live, 1 reading @ ", out)
+        self.assertNotIn("degraded", out)
 
 
 @unittest.skipUnless(BSP.is_file(), "de421.bsp not in local cache")

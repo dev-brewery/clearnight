@@ -26,6 +26,7 @@ class HttpJsonAdapter:
         self.field_map = field_map
         self.timeout_s = timeout_s
         self.headers = headers or {}
+        self.last_error: str | None = None  # exception class of the last failed read
 
     def read_recent(self, hours: int = 6, now_utc: dt.datetime | None = None) -> list[Reading]:
         now = now_utc or dt.datetime.now(dt.timezone.utc)
@@ -44,7 +45,9 @@ class HttpJsonAdapter:
 
             reading = Reading(ts, opt("temperature"), opt("humidity"),
                               opt("pressure"), opt("dew_point"))
+            self.last_error = None
             return [reading]
         except Exception as exc:  # transport or parse error: degrade, never crash
-            warnings.warn(f"sensor http_json failed: {type(exc).__name__}")
+            self.last_error = type(exc).__name__
+            warnings.warn(f"sensor http_json failed: {self.last_error}")
             return []

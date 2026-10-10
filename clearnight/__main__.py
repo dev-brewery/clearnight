@@ -243,16 +243,24 @@ def _brief_section(cfg: Config, ranked: list, tz: ZoneInfo, offline: bool,
 
 
 def _readings_online(cfg: Config, notes: list[str]):
-    """Real sensor adapter at real now; failure -> no readings, noted."""
+    """Real sensor adapter at real now; the footer states the read OUTCOME
+    (live vs degraded) - it must never overstate provenance (T27)."""
     kind = cfg.sensor.kind
+    adapter = make_adapter(cfg.sensor)
     try:
-        readings = make_adapter(cfg.sensor).read_recent(6)
-        notes.append(f"sensor: {kind} adapter (live read)")
-        return readings
-    except Exception as e:  # noqa: BLE001 - degraded source, keep planning
-        notes.append(f"sensor: {kind} adapter failed ({type(e).__name__}); "
-                     "no ground truth")
-        return []
+        readings = adapter.read_recent(6)
+    except Exception as e:  # noqa: BLE001 - defensive; adapters self-degrade
+        readings, err = [], type(e).__name__
+    else:
+        err = getattr(adapter, "last_error", None)
+    if readings:
+        notes.append(f"sensor: {kind} (live, {len(readings)} reading"
+                     f"{'s' if len(readings) != 1 else ''} @ "
+                     f"{readings[-1].timestamp_utc.isoformat()})")
+    else:
+        notes.append(f"sensor: {kind} (degraded: {err or 'no readings'}"
+                     " - dew input falls back to forecast)")
+    return readings
 
 
 def _run_plan_online(cfg: Config, args: argparse.Namespace) -> int:
