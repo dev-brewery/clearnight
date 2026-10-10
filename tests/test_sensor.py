@@ -228,6 +228,44 @@ class TestHttpHeadersAndHAFormat(unittest.TestCase):
         self.assertEqual(readings, [])
 
 
+class TestFileMockSensorRealIO(unittest.TestCase):
+    """T28: REAL-IO test (no mocks) — the file:// mock pattern end-to-end.
+
+    Reads the COMMITTED fixture clearnight/fixtures/mock_ha_sensor.json via a
+    file:// URL, exactly as the runtime out/mock_sensor.json twin is consumed.
+    """
+
+    MOCK_URL = (FIXTURES_DIR / "mock_ha_sensor.json").resolve().as_uri()
+
+    FMAP = {"timestamp": "last_updated",
+            "temperature": "attributes.temperature_c",
+            "humidity": "attributes.humidity_pct",
+            "pressure": "attributes.pressure_hpa",
+            "dew_point": "attributes.dew_point_c"}
+
+    EXPECTED = {"temperature_c": 22.82, "humidity_pct": 30.0,
+                "pressure_hpa": 1013.2, "dew_point_c": 4.12}
+
+    def test_file_url_reads_committed_mock_fixture(self):
+        readings = HttpJsonAdapter(self.MOCK_URL, self.FMAP).read_recent(6, NOW)
+        self.assertEqual(len(readings), 1)
+        r = readings[0]
+        self.assertEqual(r.timestamp_utc, dt.datetime(2026, 10, 9, 22, 0, tzinfo=UTC))
+        for field, want in self.EXPECTED.items():
+            got = getattr(r, field)
+            self.assertIsNotNone(got, field)
+            self.assertAlmostEqual(got, want, places=2, msg=field)
+
+    def test_fixture_file_matches_demo_values(self):
+        data = json.loads((FIXTURES_DIR / "mock_ha_sensor.json").read_text("utf-8"))
+        self.assertEqual(data["state"], "ok")
+        self.assertEqual(data["last_updated"], "2026-10-09T22:00:00+00:00")
+        attrs = data["attributes"]
+        for key, want in self.EXPECTED.items():
+            self.assertAlmostEqual(attrs[key], want, places=2, msg=key)
+        self.assertIn("friendly_name", attrs)
+
+
 class TestFactory(unittest.TestCase):
     def test_both_kinds_constructed_from_cfg(self):
         a = make_adapter(CSV_CFG)

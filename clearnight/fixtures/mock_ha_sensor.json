@@ -1,0 +1,11 @@
+{
+  "state": "ok",
+  "last_updated": "2026-10-09T22:00:00+00:00",
+  "attributes": {
+    "temperature_c": 22.82,
+    "humidity_pct": 30.0,
+    "pressure_hpa": 1013.2,
+    "dew_point_c": 4.12,
+    "friendly_name": "clearnight demo mock sensor (fixture-week values)"
+  }
+}

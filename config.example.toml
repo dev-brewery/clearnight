@@ -22,6 +22,11 @@ path = "clearnight/fixtures/sensor.csv"
 # url = "http://homeassistant.local:8123/api/states/sensor.example"
 # field_map = { temperature = "temperature_c", humidity = "humidity_pct", pressure = "pressure_hpa", dew_point = "dew_point_c" }
 # timeout_s = 10
+# PoC pattern (T28): point url at a local HA-shaped JSON file (no server, no auth):
+# url = "file://<repo>/clearnight/fixtures/mock_ha_sensor.json"
+# The committed fixture mirrors the HA states API shape; the adapter does not care
+# where the JSON lives. The runtime twin of this pattern is out/mock_sensor.json
+# (gitignored) holding real Thursday-night values in the same shape.
 # Auth headers if the endpoint needs them (config.local.toml ONLY, never commit):
 # [sensor.headers]
 # Authorization = "Bearer <long-lived token - config.local.toml ONLY, never commit>"
