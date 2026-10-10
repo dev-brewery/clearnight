@@ -1,11 +1,13 @@
 # POST — clearnight (DEV Hacktoberfest Week 1: "Touch Grass")
 
-Status: FINAL — publish today (owner order, Oct 9). Tags: `devchallenge`,
+Status: PUBLISHED Oct 10 — https://dev.to/devbrewery/clearnight-a-stargazing-planner-that-tells-you-which-nights-are-worth-going-outside-6ni — body below mirrors the live post. Tags: `devchallenge`,
 `hf26challenge`. Account: dev.to/devbrewery. Images: docs/plan-offline.png,
 docs/fieldlog-comparison.png. Repo: github.com/dev-brewery/clearnight.
 Everything below the line is the post body, ready to paste.
 
 ---
+
+*This is a submission for the [Hacktoberfest Open-Source AI Challenge Week 1: Touch Grass](https://dev.to/challenges/hacktoberfest-week1-2026-10-05)*
 
 ## What I built and how it gets people outdoors
 
@@ -45,12 +47,12 @@ The full offline plan — seven ranked nights, verdicts, the Draconids peak
 marked, an honestly overcast weekend capped at STAY IN BED, and the labeled
 brief:
 
-![clearnight offline plan — red-on-black, ranked nights with verdicts](https://raw.githubusercontent.com/dev-brewery/clearnight/main/docs/plan-offline.png)
+![clearnight offline plan — red-on-black, ranked nights with verdicts](https://raw.githubusercontent.com/dev-brewery/clearnight/main/docs/plan-offline.png?v=2)
 
 A night's prediction rendered beside its logged outcome — the accountability
 loop, demonstrated with a mock log entry:
 
-![prediction beside field-log outcome](https://raw.githubusercontent.com/dev-brewery/clearnight/main/docs/fieldlog-comparison.png)
+![prediction beside field-log outcome](https://raw.githubusercontent.com/dev-brewery/clearnight/main/docs/fieldlog-comparison.png?v=2)
 
 Both regenerate from a fresh clone: `python -m clearnight plan --offline`.
 
@@ -71,6 +73,8 @@ matches the independent reference. The cross-check ships as a test
 (`tests/test_accuracy.py`), not a claim.
 
 ## Code
+
+{% embed https://github.com/dev-brewery/clearnight %}
 
 **github.com/dev-brewery/clearnight** (MIT). Python 3.12, one pinned runtime
 dependency (skyfield) plus a Windows tzdata marker, standard library for
